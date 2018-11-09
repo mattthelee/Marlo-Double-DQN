@@ -1,21 +1,25 @@
 import marlo
 import numpy as np
-import pandas
-import sklearn
 import random
 from keras.models import Sequential, load_model
 from keras.layers import Dense
 from keras.layers import Conv2D
 from keras.layers import MaxPooling2D,Flatten
 from collections import deque
+from keras.models import model_from_yaml
+from matplotlib import pyplot as plt
+
 import pdb
-import gym
+from keras.backend import manual_variable_initialization
 
 
 # Notes:
 # env.action_space.sample() gives a random action from those available, applies to any env
-# TODO The loaded model seems to always give action 2 as the best one. I ssupsect this is n issue with the loading as the model performes better after a period of training
-
+# TODO The loaded model seems to always give action 2 as the best one. I suspsect this is n issue with the loading as the model performes better after a period of training
+# I've checked that the model correctly pulls in weights so it can't be that.
+# TODO to make best use of the DQN I need to use an LTSM or stack previous game frames before sending them to the NN. See the deepmind atari paper or hausknecht and stone 2015
+# TODO info data contains the orientation and position of the agent, could use this as a feature to train the nn. That might be best as a separate nn that takes in the history of actions taken How does it deal with the straint position being none zero, how does it deal with the maps changing?
+#   L Even just having the NN output the position it thinks its in would be a useful thing to train. What other features are valuable to extract from the images?
 def sendAgentToTrainingCamp(env, agent):
     goal_steps = 500
     initial_games = 50
@@ -37,18 +41,20 @@ def sendAgentToTrainingCamp(env, agent):
                 scores.append(game_score)
                 break
             game_score += reward
-            #env.render()
             state = new_state
 
 
             if len(agent.memory) > batch_size:
                 randomBatch = random.sample(agent.memory, batch_size)
                 agent.replay(randomBatch)
-    agent.model.save('model.h5')
+    model_yaml = agent.model.to_yaml()
+    with open("model.yaml", "w") as yaml_file:
+        yaml_file.write(model_yaml)
+    agent.model.save_weights('model_weights.h5')
     return scores
 
 def continueAgentTraining(env, agent):
-    goal_steps = 500
+    goal_steps = 100
     initial_games = 50
     batch_size = 16
     scores = deque(maxlen=50)
@@ -68,13 +74,13 @@ def continueAgentTraining(env, agent):
                 scores.append(game_score)
                 break
             game_score += reward
-            #env.render()
             state = new_state
 
 
             if len(agent.memory) > batch_size:
                 randomBatch = random.sample(agent.memory, batch_size)
                 agent.replay(randomBatch)
+
     agent.model.save('model.h5')
     return scores
 
@@ -90,15 +96,14 @@ def testAgent(env, agent):
         for j in range(goal_steps):
             action = agent.act(state)
             print("Starting goal step: ", j, " of game: ", i, " avg score: ", np.mean(scores), " action: ", action)
-            #pdb.set_trace()
             new_state, reward, done, info = env.step(action)
+            pdb.set_trace()
 
             if done:
                 print("Game: ",i ," complete, score: " , game_score," last 50 scores avg: ", np.mean(scores), " epsilon ", agent.epsilon)
                 scores.append(game_score)
                 break
             game_score += reward
-            #env.render()
             state = new_state
     return scores
 
@@ -113,7 +118,15 @@ class agent:
         self.epsilon_decay = 0.99999
         self.learning_rate = 0.001
         if load_model_file:
-            self.model = load_model('model.h5')
+            # This is required to stop tensorflow reinitialising weights on model load
+            #manual_variable_initialization(True)
+            #self.model = load_model('model.h5')
+            #self.model.load_weights('model.h5')
+            yaml_file = open('model.yaml', 'r')
+            loaded_model_yaml = yaml_file.read()
+            yaml_file.close()
+            self.model = model_from_yaml(loaded_model_yaml)
+            self.model.load_weights('model_weights.h5')
         else:
             self.model = self.create_model()
 
@@ -129,7 +142,7 @@ class agent:
         model.add(Dense(128,activation='relu'))
         model.add(Dense(64,activation='relu'))
         model.add(Dense(self.action_size,activation='linear'))
-        model.compile(loss='mse', optimizer='adam')
+        model.compile(loss='mse', optimizer='rmsprop')
         return model
 
     def act(self, state):
@@ -166,8 +179,10 @@ class agent:
         return
 
 def main():
+
     client_pool = [('127.0.0.1', 10000)]
-    join_tokens = marlo.make('MarLo-FindTheGoal-v0', params={"client_pool": client_pool})
+    # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!
+    join_tokens = marlo.make('MarLo-FindTheGoal-v0', params={"client_pool": client_pool, 'suppress_info': False})
     # As this is a single agent scenario,
     # there will just be a single token
     assert len(join_tokens) == 1
@@ -181,6 +196,7 @@ def main():
     load = input("Load model? y/n or an epsilon value to continue: ")
     if load == 'y':
         myagent = agent(observation_shape, action_size,True,0.1)
+        #pdb.set_trace()
         scores = testAgent(env,myagent)
     elif load == 'n':
         myagent = agent(observation_shape, action_size)
@@ -190,6 +206,8 @@ def main():
         scores = continueAgentTraining(env,myagent)
 
     print (scores)
+    plt.plot(scores)
+    input('Any key to quit')
     return
 
 if __name__ == "__main__":
