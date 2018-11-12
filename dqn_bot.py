@@ -136,7 +136,7 @@ class agent:
         # Need to check that this is processing the colour bands correctly <- have checked this and:
         # the default is channels last which is what we have
         # This max pooling layer is quite extreme because of memory limits on machine
-        model.add(TimAveragePooling2D(pool_size=(8, 8), input_shape=(self.observation_shape)))
+        model.add(AveragePooling2D(pool_size=(8, 8), input_shape=(self.observation_shape)))
         model.add(Conv2D(32, 8, 4)) # Convolutions set to same as in Lample and Chaplet
         model.add(Conv2D(64, 4, 2)) # Convolutions set to same as in Lample and Chaplet
 
