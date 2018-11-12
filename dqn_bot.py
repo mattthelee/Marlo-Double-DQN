@@ -20,9 +20,10 @@ from keras.backend import manual_variable_initialization
 # TODO to make best use of the DQN I need to use an LTSM or stack previous game frames before sending them to the NN. See the deepmind atari paper or hausknecht and stone 2015
 # TODO info data contains the orientation and position of the agent, could use this as a feature to train the nn. That might be best as a separate nn that takes in the history of actions taken How does it deal with the straint position being none zero, how does it deal with the maps changing?
 #   L Even just having the NN output the position it thinks its in would be a useful thing to train. What other features are valuable to extract from the images?
+# TODO consider transfer learining from pretrained CNN
 def sendAgentToTrainingCamp(env, agent):
     goal_steps = 500
-    initial_games = 50
+    initial_games = 10000
     batch_size = 16
     scores = deque(maxlen=50)
     for i in range(initial_games):
@@ -115,7 +116,7 @@ class agent:
         self.gamma = 0.95    # discount rate
         self.epsilon_min = 0.01
         self.epsilon = epsilon
-        self.epsilon_decay = 0.99999
+        self.epsilon_decay = 0.999
         self.learning_rate = 0.001
         if load_model_file:
             # This is required to stop tensorflow reinitialising weights on model load
@@ -135,8 +136,10 @@ class agent:
         # Need to check that this is processing the colour bands correctly <- have checked this and:
         # the default is channels last which is what we have
         # This max pooling layer is quite extreme because of memory limits on machine
-        model.add(MaxPooling2D(pool_size=(8, 8), input_shape=(self.observation_shape)))
-        model.add(Conv2D(8, (3, 3)))
+        model.add(TimAveragePooling2D(pool_size=(8, 8), input_shape=(self.observation_shape)))
+        model.add(Conv2D(32, 8, 4)) # Convolutions set to same as in Lample and Chaplet
+        model.add(Conv2D(64, 4, 2)) # Convolutions set to same as in Lample and Chaplet
+
         # Flatten needed to get a single vector as output otherwise get a matrix
         model.add(Flatten())
         model.add(Dense(128,activation='relu'))
@@ -193,7 +196,9 @@ def main():
     # Get the number of available states and actions
     observation_shape = env.observation_space.shape
     action_size = env.action_space.n
+    pdb.set_trace()
     load = input("Load model? y/n or an epsilon value to continue: ")
+
     if load == 'y':
         myagent = agent(observation_shape, action_size,True,0.1)
         #pdb.set_trace()
@@ -206,8 +211,9 @@ def main():
         scores = continueAgentTraining(env,myagent)
 
     print (scores)
-    plt.plot(scores)
-    input('Any key to quit')
+    np.savetxt('scores',np.array(scores))
+    #plt.plot(scores)
+    #plt.show()
     return
 
 if __name__ == "__main__":
