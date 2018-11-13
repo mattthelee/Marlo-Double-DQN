@@ -4,7 +4,7 @@ import random
 from keras.models import Sequential, load_model
 from keras.layers import Dense
 from keras.layers import Conv2D
-from keras.layers import MaxPooling2D,Flatten
+from keras.layers import Flatten,AveragePooling2D,TimeDistributed, LSTM
 from collections import deque
 from keras.models import model_from_yaml
 from matplotlib import pyplot as plt
@@ -21,20 +21,24 @@ from keras.backend import manual_variable_initialization
 # TODO info data contains the orientation and position of the agent, could use this as a feature to train the nn. That might be best as a separate nn that takes in the history of actions taken How does it deal with the straint position being none zero, how does it deal with the maps changing?
 #   L Even just having the NN output the position it thinks its in would be a useful thing to train. What other features are valuable to extract from the images?
 # TODO consider transfer learining from pretrained CNN
+
+
 def sendAgentToTrainingCamp(env, agent):
     goal_steps = 500
     initial_games = 10000
     batch_size = 16
     scores = deque(maxlen=50)
+
     for i in range(initial_games):
         reward = 0
         game_score = 0
         env.reset()
         state = env.last_image
+
         for j in range(goal_steps):
             print("Starting goal step: ", j, " of game: ", i, " avg score: ", np.mean(scores))
             action = agent.act(state)
-            new_state, reward, done, info = env.step(action)
+            new_state, reward, done, info = performAction(env, action)
             agent.memory.append((state,action, reward, new_state, done))
 
             if done:
@@ -44,30 +48,48 @@ def sendAgentToTrainingCamp(env, agent):
             game_score += reward
             state = new_state
 
-
             if len(agent.memory) > batch_size:
                 randomBatch = random.sample(agent.memory, batch_size)
                 agent.replay(randomBatch)
+
     model_yaml = agent.model.to_yaml()
     with open("model.yaml", "w") as yaml_file:
         yaml_file.write(model_yaml)
     agent.model.save_weights('model_weights.h5')
+
     return scores
+
+def performAction(env, action, frames = 4):
+    # To ensure the agent is able to work in a 3d env, we need to give it more than one frame. See Deepmind's ataris games paper
+    totalReward = 0
+    concatState = []
+    for i in range(frames):
+        new_state, reward, done, info = env.step(action)
+        if done:
+            break
+        concatState.append(new_state)
+        totalReward += reward
+
+    return np.array(concatState), totalReward, done, info
+
+
+
 
 def continueAgentTraining(env, agent):
     goal_steps = 100
     initial_games = 50
     batch_size = 16
+    frames = 4
     scores = deque(maxlen=50)
     for i in range(initial_games):
         reward = 0
         game_score = 0
         env.reset()
-        state = env.last_image
+        state = performAction(env,0)
         for j in range(goal_steps):
             action = agent.act(state)
             print("Starting goal step: ", j, " of game: ", i, " avg score: ", np.mean(scores), " action: ", action)
-            new_state, reward, done, info = env.step(action)
+            new_state, reward, done, info = performAction(env, action)
             agent.memory.append((state,action, reward, new_state, done))
 
             if done:
@@ -97,8 +119,8 @@ def testAgent(env, agent):
         for j in range(goal_steps):
             action = agent.act(state)
             print("Starting goal step: ", j, " of game: ", i, " avg score: ", np.mean(scores), " action: ", action)
-            new_state, reward, done, info = env.step(action)
-            pdb.set_trace()
+            new_state, reward, done, info = performAction(env, action)
+            #pdb.set_trace()
 
             if done:
                 print("Game: ",i ," complete, score: " , game_score," last 50 scores avg: ", np.mean(scores), " epsilon ", agent.epsilon)
@@ -136,14 +158,16 @@ class agent:
         # Need to check that this is processing the colour bands correctly <- have checked this and:
         # the default is channels last which is what we have
         # This max pooling layer is quite extreme because of memory limits on machine
-        model.add(AveragePooling2D(pool_size=(8, 8), input_shape=(self.observation_shape)))
-        model.add(Conv2D(32, 8, 4)) # Convolutions set to same as in Lample and Chaplet
-        model.add(Conv2D(64, 4, 2)) # Convolutions set to same as in Lample and Chaplet
+        model.add(TimeDistributed(AveragePooling2D(pool_size=(8, 8), input_shape=(4,600,800,3))))
+        model.add(TimeDistributed(Conv2D(32, 8, 4))) # Convolutions set to same as in Lample and Chaplet
+        model.add(TimeDistributed(Conv2D(64, 4, 2))) # Convolutions set to same as in Lample and Chaplet
 
+
+        model.add(TimeDistributed(Dense(128,activation='relu')))
+        model.add(TimeDistributed(Dense(64,activation='relu')))
+        model.add(LSTM(32))
         # Flatten needed to get a single vector as output otherwise get a matrix
-        model.add(Flatten())
-        model.add(Dense(128,activation='relu'))
-        model.add(Dense(64,activation='relu'))
+        model.add(TimeDistributed(Flatten()))
         model.add(Dense(self.action_size,activation='linear'))
         model.compile(loss='mse', optimizer='rmsprop')
         return model
@@ -166,10 +190,10 @@ class agent:
                 # Set the reward for finishing the game
                 target_q = reward
             else:
-                #pdb.set_trace()
+                pdb.set_trace()
                 #self.model.predict(newState.reshape([-1, 600, 800, 3]))
-                target_q = reward + self.gamma * np.amax(self.model.predict(newState.reshape([-1, 600, 800, 3])))
-            prediction = self.model.predict(newState.reshape([-1, 600, 800, 3]))
+                target_q = reward + self.gamma * np.amax(self.model.predict(newState.reshape([4, 600, 800, 3])))
+            prediction = self.model.predict(newState.reshape([4, 600, 800, 3]))
             prediction[0][action] = target_q
             x_train.append(state)
             y_train.append(prediction[0])
@@ -196,7 +220,7 @@ def main():
     # Get the number of available states and actions
     observation_shape = env.observation_space.shape
     action_size = env.action_space.n
-    pdb.set_trace()
+    #pdb.set_trace()
     load = input("Load model? y/n or an epsilon value to continue: ")
 
     if load == 'y':
@@ -218,3 +242,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+#[_default_base_params', '_default_params', '_get_observation', '_get_video_frame', '_get_world_state', '_kill_clients', '_reset', '_rounds', '_take_action', '_turn', 'action_names', 'action_space', 'action_spaces', 'agent_host', 'build_env', 'client_pool', 'close', 'default_base_params', 'dry_run', 'experiment_id', 'init', 'jinj2_env', 'jinja2_fileloader', 'last_image', 'metadata', 'mission_record_spec', 'mission_spec', 'observation_space', 'params', 'render', 'render_mission_spec', 'reset', 'reward_range', 'seed', 'send_command', 'setup_action_commands', 'setup_action_space', 'setup_client_pool', 'setup_game_mode', 'setup_mission_record', 'setup_mission_spec', 'setup_observation_space', 'setup_observe_params', 'setup_templating', 'setup_turn_based_games', 'setup_video', 'spec', 'step', 'step_wrapper', 'templates_folder', 'transform_mission_xml', 'unwrapped', 'video_depth', 'video_height', 'video_width', 'white_listed_join_params']
