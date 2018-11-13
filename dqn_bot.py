@@ -154,20 +154,22 @@ class agent:
             self.model = self.create_model()
 
     def create_model(self):
-        model = Sequential()
+        cnn = Sequential()
         # Need to check that this is processing the colour bands correctly <- have checked this and:
         # the default is channels last which is what we have
         # This max pooling layer is quite extreme because of memory limits on machine
-        model.add(TimeDistributed(AveragePooling2D(pool_size=(8, 8), input_shape=(4,600,800,3))))
-        model.add(TimeDistributed(Conv2D(32, 8, 4))) # Convolutions set to same as in Lample and Chaplet
-        model.add(TimeDistributed(Conv2D(64, 4, 2))) # Convolutions set to same as in Lample and Chaplet
+        cnn.add(AveragePooling2D(pool_size=(8, 8), input_shape=(self.observation_shape)))
+        cnn.add(Conv2D(32, 8, 4)) # Convolutions set to same as in Lample and Chaplet
+        cnn.add(Conv2D(64, 4, 2)) # Convolutions set to same as in Lample and Chaplet
 
+        cnn.add(Dense(128,activation='relu'))
+        cnn.add(Dense(64,activation='relu'))
+        cnn.add(Flatten())
 
-        model.add(TimeDistributed(Dense(128,activation='relu')))
-        model.add(TimeDistributed(Dense(64,activation='relu')))
+        model = Sequential()
+        model.add(TimeDistributed(cnn))
         model.add(LSTM(32))
         # Flatten needed to get a single vector as output otherwise get a matrix
-        model.add(TimeDistributed(Flatten()))
         model.add(Dense(self.action_size,activation='linear'))
         model.compile(loss='mse', optimizer='rmsprop')
         return model
@@ -179,7 +181,7 @@ class agent:
         if np.random.rand() <= self.epsilon:
             print("Random Action")
             return random.randrange(self.action_size)
-        act_values = self.model.predict(state.reshape([-1, 600, 800, 3]))
+        act_values = self.model.predict(state.reshape([-1, 4, 600, 800, 3]))
         return np.argmax(act_values[0])
 
     def replay(self, batch):
@@ -192,8 +194,8 @@ class agent:
             else:
                 pdb.set_trace()
                 #self.model.predict(newState.reshape([-1, 600, 800, 3]))
-                target_q = reward + self.gamma * np.amax(self.model.predict(newState.reshape([4, 600, 800, 3])))
-            prediction = self.model.predict(newState.reshape([4, 600, 800, 3]))
+                target_q = reward + self.gamma * np.amax(self.model.predict(newState.reshape([-1, 4, 600, 800, 3])))
+            prediction = self.model.predict(newState.reshape([-1, 4, 600, 800, 3]))
             prediction[0][action] = target_q
             x_train.append(state)
             y_train.append(prediction[0])
