@@ -21,7 +21,7 @@ from keras.backend import manual_variable_initialization
 # TODO info data contains the orientation and position of the agent, could use this as a feature to train the nn. That might be best as a separate nn that takes in the history of actions taken How does it deal with the straint position being none zero, how does it deal with the maps changing?
 #   L Even just having the NN output the position it thinks its in would be a useful thing to train. What other features are valuable to extract from the images?
 # TODO consider transfer learining from pretrained CNN
-def sendAgentToTrainingCamp(env, agent):
+def trainAgent(env, agent):
     goal_steps = 500
     initial_games = 10000
     batch_size = 16
@@ -54,35 +54,6 @@ def sendAgentToTrainingCamp(env, agent):
     agent.model.save_weights('model_weights.h5')
     return scores
 
-def continueAgentTraining(env, agent):
-    goal_steps = 100
-    initial_games = 50
-    batch_size = 16
-    scores = deque(maxlen=50)
-    for i in range(initial_games):
-        reward = 0
-        game_score = 0
-        env.reset()
-        state = env.last_image
-        for j in range(goal_steps):
-            action = agent.act(state)
-            print("Starting goal step: ", j, " of game: ", i, " avg score: ", np.mean(scores), " action: ", action)
-            new_state, reward, done, info = env.step(action)
-            agent.memory.append((state,action, reward, new_state, done))
-
-            if done:
-                print("Game: ",i ," complete, score: " , game_score," last 50 scores avg: ", np.mean(scores), " epsilon ", agent.epsilon)
-                scores.append(game_score)
-                break
-            game_score += reward
-            state = new_state
-
-
-            if len(agent.memory) > batch_size:
-                randomBatch = random.sample(agent.memory, batch_size)
-                agent.replay(randomBatch)
-    return scores
-
 def testAgent(env, agent):
     goal_steps = 500
     initial_games = 50
@@ -97,7 +68,6 @@ def testAgent(env, agent):
             print("Starting goal step: ", j, " of game: ", i, " avg score: ", np.mean(scores), " action: ", action)
             new_state, reward, done, info = env.step(action)
             #pdb.set_trace()
-
             if done:
                 print("Game: ",i ," complete, score: " , game_score," last 50 scores avg: ", np.mean(scores), " epsilon ", agent.epsilon)
                 scores.append(game_score)
@@ -180,7 +150,6 @@ class agent:
         return
 
 def main():
-
     client_pool = [('127.0.0.1', 10000)]
     # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!
     join_tokens = marlo.make('MarLo-FindTheGoal-v0', params={"client_pool": client_pool, 'suppress_info': False})
@@ -203,10 +172,10 @@ def main():
         scores = testAgent(env,myagent)
     elif load == 'n':
         myagent = agent(observation_shape, action_size)
-        scores = sendAgentToTrainingCamp(env, myagent)
+        scores = trainAgent(env, myagent)
     else:
         myagent = agent(observation_shape, action_size,True,float(load))
-        scores = continueAgentTraining(env,myagent)
+        scores = trainAgent(env,myagent)
 
     print (scores)
     np.savetxt('scores',np.array(scores))
