@@ -4,7 +4,7 @@ import random
 from keras.models import Sequential, load_model
 from keras.layers import Dense
 from keras.layers import Conv2D
-from keras.layers import MaxPooling2D,Flatten
+from keras.layers import MaxPooling2D,Flatten, AveragePooling2D
 from collections import deque
 from keras.models import model_from_yaml
 from matplotlib import pyplot as plt
@@ -98,7 +98,7 @@ def testAgent(env, agent):
             action = agent.act(state)
             print("Starting goal step: ", j, " of game: ", i, " avg score: ", np.mean(scores), " action: ", action)
             new_state, reward, done, info = env.step(action)
-            pdb.set_trace()
+            #pdb.set_trace()
 
             if done:
                 print("Game: ",i ," complete, score: " , game_score," last 50 scores avg: ", np.mean(scores), " epsilon ", agent.epsilon)
@@ -196,7 +196,7 @@ def main():
     # Get the number of available states and actions
     observation_shape = env.observation_space.shape
     action_size = env.action_space.n
-    pdb.set_trace()
+    #pdb.set_trace()
     load = input("Load model? y/n or an epsilon value to continue: ")
 
     if load == 'y':
