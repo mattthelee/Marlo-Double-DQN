@@ -81,8 +81,6 @@ def continueAgentTraining(env, agent):
             if len(agent.memory) > batch_size:
                 randomBatch = random.sample(agent.memory, batch_size)
                 agent.replay(randomBatch)
-
-    agent.model.save('model.h5')
     return scores
 
 def testAgent(env, agent):
@@ -169,7 +167,7 @@ class agent:
                 #pdb.set_trace()
                 #self.model.predict(newState.reshape([-1, 600, 800, 3]))
                 target_q = reward + self.gamma * np.amax(self.model.predict(newState.reshape([-1, 600, 800, 3])))
-            prediction = self.model.predict(newState.reshape([-1, 600, 800, 3]))
+            prediction = self.model.predict(state.reshape([-1, 600, 800, 3]))
             prediction[0][action] = target_q
             x_train.append(state)
             y_train.append(prediction[0])
