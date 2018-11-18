@@ -8,6 +8,8 @@ from keras.layers import MaxPooling2D,Flatten, AveragePooling2D
 from collections import deque
 from keras.models import model_from_yaml
 from matplotlib import pyplot as plt
+from past.utils import old_div # tutorial 5
+import MalmoPython
 
 import pdb
 from keras.backend import manual_variable_initialization
@@ -149,6 +151,38 @@ class agent:
             self.epsilon = 0
         return
 
+def Menger(xorg, yorg, zorg, size, blocktype, variant, holetype):
+    # Needed to run the tutorial 5 mission xml
+    #draw solid chunk
+    genstring = GenCuboidWithVariant(xorg,yorg,zorg,xorg+size-1,yorg+size-1,zorg+size-1,blocktype,variant) + "\n"
+    #now remove holes
+    unit = size
+    while (unit >= 3):
+        w=old_div(unit,3)
+        for i in range(0, size, unit):
+            for j in range(0, size, unit):
+                x=xorg+i
+                y=yorg+j
+                genstring += GenCuboid(x+w,y+w,zorg,(x+2*w)-1,(y+2*w)-1,zorg+size-1,holetype) + "\n"
+                y=yorg+i
+                z=zorg+j
+                genstring += GenCuboid(xorg,y+w,z+w,xorg+size-1, (y+2*w)-1,(z+2*w)-1,holetype) + "\n"
+                genstring += GenCuboid(x+w,yorg,z+w,(x+2*w)-1,yorg+size-1,(z+2*w)-1,holetype) + "\n"
+        unit = w
+    return genstring
+
+def GenCuboid(x1, y1, z1, x2, y2, z2, blocktype):
+    return '<DrawCuboid x1="' + str(x1) + '" y1="' + str(y1) + '" z1="' + str(z1) + '" x2="' + str(x2) + '" y2="' + str(y2) + '" z2="' + str(z2) + '" type="' + blocktype + '"/>'
+
+def GenCuboidWithVariant(x1, y1, z1, x2, y2, z2, blocktype, variant):
+    return '<DrawCuboid x1="' + str(x1) + '" y1="' + str(y1) + '" z1="' + str(z1) + '" x2="' + str(x2) + '" y2="' + str(y2) + '" z2="' + str(z2) + '" type="' + blocktype + '" variant="' + variant + '"/>'
+
+def loadMissionFile(filename):
+    with open(filename, 'r') as file:
+        missionXML = file.read()
+    return missionXML
+
+
 def main():
     client_pool = [('127.0.0.1', 10000)]
     # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!
@@ -159,6 +193,9 @@ def main():
     join_token = join_tokens[0]
 
     env = marlo.init(join_token)
+    # Change the spec of the mission by loading xml from file
+    missionXML= loadMissionFile('mission_spec')
+    env.mission_spec = MalmoPython.MissionSpec(missionXML, True)
 
     # Get the number of available states and actions
     observation_shape = env.observation_space.shape
