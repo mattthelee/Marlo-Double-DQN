@@ -62,7 +62,7 @@
       <ObservationFromGrid>
           <Grid name="floor5x5">
             <min x="-2" y="-1" z="-2"/>
-            <max x="2" y="-1" z="2"/>
+            <max x="2" y="1" z="2"/>
           </Grid>
       </ObservationFromGrid>
       <ContinuousMovementCommands turnSpeedDegs="180">

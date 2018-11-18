@@ -194,7 +194,7 @@ def main():
 
     env = marlo.init(join_token)
     # Change the spec of the mission by loading xml from file
-    missionXML= loadMissionFile('find_the_goal_mission.xml')
+    missionXML= loadMissionFile('find_the_goal_mission2.xml')
     #missionXML= loadMissionFile('mission_spec')
 
     env.mission_spec = MalmoPython.MissionSpec(missionXML, True)
@@ -211,6 +211,7 @@ def main():
         scores = testAgent(env,myagent)
     elif load == 'n':
         myagent = agent(observation_shape, action_size)
+        pdb.set_trace()
         scores = trainAgent(env, myagent)
     else:
         myagent = agent(observation_shape, action_size,True,float(load))
