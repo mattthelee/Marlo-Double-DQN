@@ -194,7 +194,9 @@ def main():
 
     env = marlo.init(join_token)
     # Change the spec of the mission by loading xml from file
-    missionXML= loadMissionFile('mission_spec')
+    missionXML= loadMissionFile('find_the_goal_mission.xml')
+    #missionXML= loadMissionFile('mission_spec')
+
     env.mission_spec = MalmoPython.MissionSpec(missionXML, True)
 
     # Get the number of available states and actions
