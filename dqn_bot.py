@@ -8,6 +8,8 @@ from keras.layers import MaxPooling2D,Flatten, AveragePooling2D
 from collections import deque
 from keras.models import model_from_yaml
 from matplotlib import pyplot as plt
+from past.utils import old_div # tutorial 5
+import MalmoPython
 
 import pdb
 from keras.backend import manual_variable_initialization
@@ -186,6 +188,54 @@ class agent:
             self.epsilon = 0
         return
 
+def Menger(xorg, yorg, zorg, size, blocktype, variant, holetype):
+    # Needed to run the tutorial 5 mission xml
+    #draw solid chunk
+    genstring = GenCuboidWithVariant(xorg,yorg,zorg,xorg+size-1,yorg+size-1,zorg+size-1,blocktype,variant) + "\n"
+    #now remove holes
+    unit = size
+    while (unit >= 3):
+        w=old_div(unit,3)
+        for i in range(0, size, unit):
+            for j in range(0, size, unit):
+                x=xorg+i
+                y=yorg+j
+                genstring += GenCuboid(x+w,y+w,zorg,(x+2*w)-1,(y+2*w)-1,zorg+size-1,holetype) + "\n"
+                y=yorg+i
+                z=zorg+j
+                genstring += GenCuboid(xorg,y+w,z+w,xorg+size-1, (y+2*w)-1,(z+2*w)-1,holetype) + "\n"
+                genstring += GenCuboid(x+w,yorg,z+w,(x+2*w)-1,yorg+size-1,(z+2*w)-1,holetype) + "\n"
+        unit = w
+    return genstring
+
+def GenCuboid(x1, y1, z1, x2, y2, z2, blocktype):
+    return '<DrawCuboid x1="' + str(x1) + '" y1="' + str(y1) + '" z1="' + str(z1) + '" x2="' + str(x2) + '" y2="' + str(y2) + '" z2="' + str(z2) + '" type="' + blocktype + '"/>'
+
+def GenCuboidWithVariant(x1, y1, z1, x2, y2, z2, blocktype, variant):
+    return '<DrawCuboid x1="' + str(x1) + '" y1="' + str(y1) + '" z1="' + str(z1) + '" x2="' + str(x2) + '" y2="' + str(y2) + '" z2="' + str(z2) + '" type="' + blocktype + '" variant="' + variant + '"/>'
+
+def loadMissionFile(filename):
+    with open(filename, 'r') as file:
+        missionXML = file.read()
+    return missionXML
+
+def blockEncoder(floorList):
+    # We need to convert the block names from strings to vectors as they are categorical data
+    # takes in a i-length list of the blocks with j different block types and returns an i*j length list indicating the encoded version.
+    blockList = ['air','cobblestone','stone','gold_block']
+    blockDict = {}
+    for i,block in enumerate(blockList):
+        blockDict[block] = np.zeros(len(blockList))
+        blockDict[block][i] = 1
+
+    vectorisedList = []
+    for i in floorList:
+        # Adds content of list to other list. N.B. we might want to use append here depending on how we handle the data
+        vectorisedList.extend(blockDict[i])
+
+    return vectorisedList
+
+
 def main():
     client_pool = [('127.0.0.1', 10000)]
     # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!
@@ -196,11 +246,15 @@ def main():
     join_token = join_tokens[0]
 
     env = marlo.init(join_token)
+    # Change the spec of the mission by loading xml from file
+    missionXML= loadMissionFile('find_the_goal_mission2.xml')
+    #missionXML= loadMissionFile('mission_spec')
+
+    env.mission_spec = MalmoPython.MissionSpec(missionXML, True)
 
     #  Get the number of available states and actions - generates the output of CNN
     observation_shape = env.observation_space.shape
     action_size = env.action_space.n
-    #pdb.set_trace()
 
     # Can start from a pre-built model
     load = input("Load model? y/n or an epsilon value to continue: ")
@@ -211,6 +265,7 @@ def main():
         scores = testAgent(env,myagent)
     elif load == 'n':
         myagent = agent(observation_shape, action_size)
+        pdb.set_trace()
         scores = trainAgent(env, myagent)
     else:
         #TODO - how come the 'epsilon value' runs still load a model??
