@@ -60,9 +60,9 @@
       </VideoProducer>
       <ObservationFromFullStats/>
       <ObservationFromGrid>
-          <Grid name="floor5x5">
-            <min x="-2" y="-1" z="-2"/>
-            <max x="2" y="1" z="2"/>
+          <Grid name="floor11x11">
+            <min x="-5" y="-1" z="-5"/>
+            <max x="5" y="1" z="5"/>
           </Grid>
       </ObservationFromGrid>
       <ContinuousMovementCommands turnSpeedDegs="180">
