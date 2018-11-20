@@ -23,6 +23,10 @@ from keras.backend import manual_variable_initialization
 # TODO info data contains the orientation and position of the agent, could use this as a feature to train the nn. That might be best as a separate nn that takes in the history of actions taken How does it deal with the straint position being none zero, how does it deal with the maps changing?
 #   L Even just having the NN output the position it thinks its in would be a useful thing to train. What other features are valuable to extract from the images?
 # TODO consider transfer learining from pretrained CNN
+# TODO Ben: Create method to rotate the floor grid by the yaw as a function
+# TODO Johnny: Create method to do 5 turns in a given direction rather than one
+# TODO Matt: Adapt the NN to output the floor grid as well as the q-values. 
+
 
 def trainAgent(env, agent):
     # Amount of steps till stop
@@ -223,6 +227,7 @@ def blockEncoder(floorList):
     # We need to convert the block names from strings to vectors as they are categorical data
     # takes in a i-length list of the blocks with j different block types and returns an i*j length list indicating the encoded version.
     blockList = ['air','cobblestone','stone','gold_block']
+    # TODO need to simplfy the classes to classify these under a type of: air, goal, solid, danger (lava)
     blockDict = {}
     for i,block in enumerate(blockList):
         blockDict[block] = np.zeros(len(blockList))
@@ -255,7 +260,7 @@ def main():
     #  Get the number of available states and actions - generates the output of CNN
     observation_shape = env.observation_space.shape
     action_size = env.action_space.n
-
+    pdb.set_trace()
     # Can start from a pre-built model
     load = input("Load model? y/n or an epsilon value to continue: ")
 
