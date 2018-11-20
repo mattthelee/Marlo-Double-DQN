@@ -182,6 +182,22 @@ def loadMissionFile(filename):
         missionXML = file.read()
     return missionXML
 
+def blockEncoder(floorList):
+    # We need to convert the block names from strings to vectors as they are categorical data
+    # takes in a i-length list of the blocks with j different block types and returns an i*j length list indicating the encoded version.
+    blockList = ['air','cobblestone','stone','gold_block']
+    blockDict = {}
+    for i,block in enumerate(blockList):
+        blockDict[block] = np.zeros(len(blockList))
+        blockDict[block][i] = 1
+
+    vectorisedList = []
+    for i in floorList:
+        # Adds content of list to other list. N.B. we might want to use append here depending on how we handle the data
+        vectorisedList.extend(blockDict[i])
+
+    return vectorisedList
+
 
 def main():
     client_pool = [('127.0.0.1', 10000)]
@@ -202,7 +218,7 @@ def main():
     # Get the number of available states and actions
     observation_shape = env.observation_space.shape
     action_size = env.action_space.n
-    #pdb.set_trace()
+    pdb.set_trace()
     load = input("Load model? y/n or an epsilon value to continue: ")
 
     if load == 'y':
