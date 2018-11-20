@@ -23,37 +23,52 @@ from keras.backend import manual_variable_initialization
 # TODO info data contains the orientation and position of the agent, could use this as a feature to train the nn. That might be best as a separate nn that takes in the history of actions taken How does it deal with the straint position being none zero, how does it deal with the maps changing?
 #   L Even just having the NN output the position it thinks its in would be a useful thing to train. What other features are valuable to extract from the images?
 # TODO consider transfer learining from pretrained CNN
+
 def trainAgent(env, agent):
+    # Amount of steps till stop
     goal_steps = 500
+    # How many games to train over
     initial_games = 10000
+    # Batch for back-propagation
     batch_size = 16
     scores = deque(maxlen=50)
+    # Loop over the games initialised
     for i in range(initial_games):
         reward = 0
         game_score = 0
         env.reset()
         state = env.last_image
+        # For each step of taken action
         for j in range(goal_steps):
-            print("Starting goal step: ", j, " of game: ", i, " avg score: ", np.mean(scores))
+            print("Starting goal step: ", j + 1, " of game: ", i + 1, " avg score: ", np.mean(scores))
             action = agent.act(state)
+            # Receive the outcome of the action
             new_state, reward, done, info = env.step(action)
+            # Adds this image and action to memory
             agent.memory.append((state,action, reward, new_state, done))
 
             if done:
+                # Score is the scores for finished games
                 print("Game: ",i ," complete, score: " , game_score," last 50 scores avg: ", np.mean(scores), " epsilon ", agent.epsilon)
                 scores.append(game_score)
                 break
             game_score += reward
             state = new_state
 
-
+            # This memory is the last seen game images
             if len(agent.memory) > batch_size:
+                # Find a random batch from the memory
                 randomBatch = random.sample(agent.memory, batch_size)
+                # Perform backpropagation
                 agent.replay(randomBatch)
+
+    # Update the storage of the model
     model_yaml = agent.model.to_yaml()
     with open("model.yaml", "w") as yaml_file:
         yaml_file.write(model_yaml)
+    # Save the weights of the model
     agent.model.save_weights('model_weights.h5')
+
     return scores
 
 def testAgent(env, agent):
@@ -80,6 +95,7 @@ def testAgent(env, agent):
 
 class agent:
     def __init__(self, observation_shape, action_size, load_model_file = False, epsilon = 1.0):
+        # Initialise parameters for the agent
         self.observation_shape = observation_shape
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
@@ -89,6 +105,7 @@ class agent:
         self.epsilon_decay = 0.999
         self.learning_rate = 0.001
         if load_model_file:
+            # If you want to load a previous model
             # This is required to stop tensorflow reinitialising weights on model load
             #manual_variable_initialization(True)
             #self.model = load_model('model.h5')
@@ -99,14 +116,17 @@ class agent:
             self.model = model_from_yaml(loaded_model_yaml)
             self.model.load_weights('model_weights.h5')
         else:
+            # Start from scratch
             self.model = self.create_model()
 
     def create_model(self):
         model = Sequential()
         # Need to check that this is processing the colour bands correctly <- have checked this and:
         # the default is channels last which is what we have
+
         # This max pooling layer is quite extreme because of memory limits on machine
         model.add(AveragePooling2D(pool_size=(8, 8), input_shape=(self.observation_shape)))
+
         model.add(Conv2D(32, 8, 4)) # Convolutions set to same as in Lample and Chaplet
         model.add(Conv2D(64, 4, 2)) # Convolutions set to same as in Lample and Chaplet
 
@@ -129,25 +149,42 @@ class agent:
         return np.argmax(act_values[0])
 
     def replay(self, batch):
+        # This is how the agent is trained
         x_train = []
         y_train = []
         for state, action, reward, newState, done in batch:
             if done:
+                # If finished
                 # Set the reward for finishing the game
                 target_q = reward
             else:
+                # If not finished
                 #pdb.set_trace()
                 #self.model.predict(newState.reshape([-1, 600, 800, 3]))
+
+                # Bellman equation -  use the estimates of the
+                # Recalling what happened, not what could happen
+                # Target_Q is the ground truth Y
                 target_q = reward + self.gamma * np.amax(self.model.predict(newState.reshape([-1, 600, 800, 3])))
+
+            # prediction is prediction_q
+            # prediction has the 5 actions and predicted q-values
             prediction = self.model.predict(state.reshape([-1, 600, 800, 3]))
+            # update the certain action that we did take with a better target, from above
             prediction[0][action] = target_q
+
+            # Create the training data for X and Y that we use to fit the CNN on
             x_train.append(state)
             y_train.append(prediction[0])
+
+        # Use the training data to fit the model, via the batch
         self.model.fit(np.asarray(x_train),np.asarray(y_train),epochs=1,verbose=0)
 
+        # Decay the epsilon until the minimum
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
         else:
+            #TODO - why does this then reduce to 0 if not above epsilon_min?
             self.epsilon = 0
         return
 
@@ -215,10 +252,11 @@ def main():
 
     env.mission_spec = MalmoPython.MissionSpec(missionXML, True)
 
-    # Get the number of available states and actions
+    #  Get the number of available states and actions - generates the output of CNN
     observation_shape = env.observation_space.shape
     action_size = env.action_space.n
-    pdb.set_trace()
+
+    # Can start from a pre-built model
     load = input("Load model? y/n or an epsilon value to continue: ")
 
     if load == 'y':
@@ -230,6 +268,7 @@ def main():
         pdb.set_trace()
         scores = trainAgent(env, myagent)
     else:
+        #TODO - how come the 'epsilon value' runs still load a model??
         myagent = agent(observation_shape, action_size,True,float(load))
         scores = trainAgent(env,myagent)
 
