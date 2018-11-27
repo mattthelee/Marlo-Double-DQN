@@ -8,14 +8,13 @@ import json
 
 class QLearningAgent(object):
 
-
-    def __init__(self, actions, epsilon=0.1, alpha=0.1, gamma=1.0 ):
+    def __init__(self, actions, epsilon=0.9, alpha=0.1, gamma=1.0 ):
         self.epsilon = epsilon
         self.alpha = alpha
         self.gamma = gamma
         self.training = True
 
-        self.actions = actions
+        self.actions = [i for i in range(actions)]
         # How to find what actions are available in the particular mission?
         self.q_table = {}
 
@@ -28,18 +27,25 @@ class QLearningAgent(object):
 
     def runAgent(self, env):
 
-        obs, reward, done, info = env.reset()
-        #TODO - Function to discretise the info and just return a Q-Table Key
-        currentState = "%d:%d:%d" % (int(info["XPos"]), int(info["YPos"]), int(info["Yaw"]))
+        for i in range(1000):
 
-        while not done:
-            done, newState = self.act(env, currentState)
+            obs = env.reset()
 
-            if done:
-                # Game has finished
-                break
+            action = env.action_space.sample()
+            obs, currentReward, done, info = env.step(action)
 
-            currentState = newState
+            print(info)
+            # TODO - Is this the correct way to get the initial info?
+
+            #TODO - Function to discretise the info and just return a Q-Table Key
+            currentState = "%d:%d:%d" % (int(info['observation']["XPos"]), int(info['observation']["YPos"]), int(info['observation']["Yaw"]))
+
+            print("currentState: " + currentState)
+
+            while not done:
+                done, newState = self.act(env, currentState)
+
+                currentState = newState
 
 
 
@@ -57,28 +63,40 @@ class QLearningAgent(object):
         else:
             # Pick the highest Q-Value action for the current state
             currentStateActions = self.q_table[currentState]
-            action = np.random.choice(np.flatnonzero(currentStateActions == np.argmax(currentStateActions)))
+
+            print('currentStateActions: ' + str(currentStateActions))
+
+            action = random.choice(np.nonzero(currentStateActions == np.amax(currentStateActions))[0])
             # Pick highest action Q-value - randomly cut ties
 
             print("From State %s, taking q action: %s" % (currentState,  self.actions[action]))
 
         obs, currentReward, done, info = env.step(action)
+        #TODO - Check this reward - what is it??
+
         #TODO - Can we get this action to move a whole block
 
         #TODO - Function to discretise the info and just return a Q-Table Key
 
-        newState = "%d:%d:%d" % (int(info["XPos"]), int(info["YPos"]),int(info["Yaw"]))
+
+        if done:
+            return done, currentState
+
+
+        newState = "%d:%d:%d" % (int(info['observation']["XPos"]), int(info['observation']["YPos"]),int(info['observation']["Yaw"]))
         # If no Q Value for this state, Initialise
         if newState not in self.q_table:
             self.q_table[newState] = ([0] * len(self.actions))
 
+        print('Q-Value for Current State: ')
+        print(self.q_table[currentState])
 
         # update Q-values for this action
         if self.training:
             oldQValueAction = self.q_table[currentState][action]
+
             self.q_table[currentState][action] = oldQValueAction + self.alpha * (currentReward + self.gamma * max(
                 self.q_table[newState]) - oldQValueAction)
-            #TODO - Check this?
 
         return done, newState
 
@@ -101,7 +119,9 @@ def main():
     missionXML= loadMissionFile('find_the_goal_mission2.xml')
     #missionXML= loadMissionFile('mission_spec')
 
+    # Get the number of available actions
     actionSize = env.action_space.n
+    #TODO - Is this the best way to encode the actions??
 
     myAgent = QLearningAgent(actionSize)
 
@@ -110,8 +130,6 @@ def main():
     #env.mission_spec = MalmoPython.MissionSpec(missionXML, True)
     #TODO - See how to do this?
 
-    #  Get the number of available states and actions
-    observation_shape = env.observation_space.shape
 
 
     return
