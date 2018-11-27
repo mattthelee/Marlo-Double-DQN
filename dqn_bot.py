@@ -25,12 +25,12 @@ from keras.backend import manual_variable_initialization
 # TODO consider transfer learining from pretrained CNN
 # TODO Ben: Create method to rotate the floor grid by the yaw as a function
 # TODO Johnny: Create method to do 5 turns in a given direction rather than one
-# TODO Matt: Adapt the NN to output the floor grid as well as the q-values. 
+# TODO Matt: Adapt the NN to output the floor grid as well as the q-values.
 
 
 def trainAgent(env, agent):
     # Amount of steps till stop
-    goal_steps = 500
+    goal_steps = 100
     # How many games to train over
     initial_games = 10000
     # Batch for back-propagation
@@ -98,10 +98,12 @@ def testAgent(env, agent):
     return scores
 
 class agent:
-    def __init__(self, observation_shape, action_size, load_model_file = False, epsilon = 1.0):
+    def __init__(self, observation_shape, action_size, block_map_shape, load_model_file = False, epsilon = 1.0):
         # Initialise parameters for the agent
         self.observation_shape = observation_shape
         self.action_size = action_size
+        self.block_list = ['air','cobblestone','stone','gold_block']
+        self.block_vision_size = len(block_list) * block_map_shape[0] * block_map_shape[1]
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95    # discount rate
         self.epsilon_min = 0.01
@@ -138,7 +140,7 @@ class agent:
         model.add(Flatten())
         model.add(Dense(128,activation='relu'))
         model.add(Dense(64,activation='relu'))
-        model.add(Dense(self.action_size,activation='linear'))
+        model.add(Dense(self.action_size + self.block_vision_size,activation='linear'))
         model.compile(loss='mse', optimizer='rmsprop')
         return model
 
@@ -188,9 +190,24 @@ class agent:
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
         else:
-            #TODO - why does this then reduce to 0 if not above epsilon_min?
             self.epsilon = 0
         return
+
+    def blockEncoder(floorList):
+        # We need to convert the block names from strings to vectors as they are categorical data
+        # takes in a i-length list of the blocks with j different block types and returns an i*j length list indicating the encoded version.
+        blockList = self.blockList
+        # TODO need to simplfy the classes to classify these under a type of: air, goal, solid, danger (lava)
+        blockDict = {}
+        for i,block in enumerate(blockList):
+            blockDict[block] = np.zeros(len(blockList))
+            blockDict[block][i] = 1
+
+        vectorisedList = []
+        for i in floorList:
+            # Adds content of list to other list. N.B. we might want to use append here depending on how we handle the data
+            vectorisedList.extend(blockDict[i])
+        return vectorisedList
 
 def Menger(xorg, yorg, zorg, size, blocktype, variant, holetype):
     # Needed to run the tutorial 5 mission xml
@@ -223,28 +240,14 @@ def loadMissionFile(filename):
         missionXML = file.read()
     return missionXML
 
-def blockEncoder(floorList):
-    # We need to convert the block names from strings to vectors as they are categorical data
-    # takes in a i-length list of the blocks with j different block types and returns an i*j length list indicating the encoded version.
-    blockList = ['air','cobblestone','stone','gold_block']
-    # TODO need to simplfy the classes to classify these under a type of: air, goal, solid, danger (lava)
-    blockDict = {}
-    for i,block in enumerate(blockList):
-        blockDict[block] = np.zeros(len(blockList))
-        blockDict[block][i] = 1
-
-    vectorisedList = []
-    for i in floorList:
-        # Adds content of list to other list. N.B. we might want to use append here depending on how we handle the data
-        vectorisedList.extend(blockDict[i])
-
-    return vectorisedList
-
 
 def main():
     client_pool = [('127.0.0.1', 10000)]
     # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!
-    join_tokens = marlo.make('MarLo-FindTheGoal-v0', params={"client_pool": client_pool, 'suppress_info': False})
+    join_tokens = marlo.make('MarLo-FindTheGoal-v0', params={
+        "client_pool": client_pool,
+        'suppress_info': False,
+        'videoResolution': [84, 84]})
     # As this is a single agent scenario,
     # there will just be a single token
     assert len(join_tokens) == 1
@@ -263,18 +266,18 @@ def main():
     pdb.set_trace()
     # Can start from a pre-built model
     load = input("Load model? y/n or an epsilon value to continue: ")
-
+    block_map_shape = (4,4,3)
     if load == 'y':
-        myagent = agent(observation_shape, action_size,True,0.1)
+        myagent = agent(observation_shape, action_size, block_map_shape,True,0.1)
         #pdb.set_trace()
         scores = testAgent(env,myagent)
     elif load == 'n':
-        myagent = agent(observation_shape, action_size)
+        myagent = agent(observation_shape, action_size,block_map_shape)
         pdb.set_trace()
         scores = trainAgent(env, myagent)
     else:
         #TODO - how come the 'epsilon value' runs still load a model??
-        myagent = agent(observation_shape, action_size,True,float(load))
+        myagent = agent(observation_shape, action_size, block_map_shape,True,float(load))
         scores = trainAgent(env,myagent)
 
     print (scores)
