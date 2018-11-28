@@ -3,12 +3,17 @@ import numpy as np
 import random
 import json
 
-#import MalmoPython
-#TODO - Is this needed??
+import os
+os.chdir("C:/Users/benja/OneDrive/Documents/Queen Mary/Artificial Intelligence in Games/Assignments/MARLO/marlo")
+import utils
+
+
+#TODO - How to Save and Load the models
+#TODO - Keeps getting Mission ended: command_quota_reached;command_quota_reached - Is this ok?
 
 class QLearningAgent(object):
 
-    def __init__(self, actions, epsilon=0.9, alpha=0.1, gamma=1.0 ):
+    def __init__(self, actions, epsilon=0.1, alpha=0.1, gamma=1.0 ):
         self.epsilon = epsilon
         self.alpha = alpha
         self.gamma = gamma
@@ -29,33 +34,33 @@ class QLearningAgent(object):
 
         for i in range(1000):
 
+            # Initialise the MineCraft environment
             obs = env.reset()
+            # Do an initial 'stop' step in order to get info from env
+            obs, currentReward, done, info = env.step(0)
 
-            action = env.action_space.sample()
-            obs, currentReward, done, info = env.step(action)
-
+            print("Info: ")
             print(info)
-            # TODO - Is this the correct way to get the initial info?
 
-            #TODO - Function to discretise the info and just return a Q-Table Key
-            currentState = "%d:%d:%d" % (int(info['observation']["XPos"]), int(info['observation']["YPos"]), int(info['observation']["Yaw"]))
-
+            # Use utils module to discrete the info from the game
+            [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info)
+            currentState = "%d:%d:%d" % (int(xdisc), int(zdisc), int(yawdisc))
             print("currentState: " + currentState)
 
             while not done:
-                done, newState = self.act(env, currentState)
-
+                done, newState, newInfo = self.act(env, currentState, info)
                 currentState = newState
+                info = newInfo
 
 
 
-    def act(self, env, currentState):
+    def act(self, env, currentState, info):
 
         # If no Q Value for this state, Initialise
         if currentState not in self.q_table:
             self.q_table[currentState] = ([0] * len(self.actions))
 
-        # select the next action
+        # Select the next action
         if random.random() < self.epsilon:
             # Choose a random action
             action = random.randint(0, len(self.actions) - 1)
@@ -66,25 +71,29 @@ class QLearningAgent(object):
 
             print('currentStateActions: ' + str(currentStateActions))
 
-            action = random.choice(np.nonzero(currentStateActions == np.amax(currentStateActions))[0])
             # Pick highest action Q-value - randomly cut ties
+            action = random.choice(np.nonzero(currentStateActions == np.amax(currentStateActions))[0])
 
             print("From State %s, taking q action: %s" % (currentState,  self.actions[action]))
 
-        obs, currentReward, done, info = env.step(action)
+
+        # Plays an action to move a full block or turn a full 45 degrees
+        new_state, currentReward, done, info = utils.discreteMove(env, action, info)
+
         #TODO - Check this reward - what is it??
 
-        #TODO - Can we get this action to move a whole block
 
-        #TODO - Function to discretise the info and just return a Q-Table Key
-
-
+        # Check if the game is finished
         if done:
-            return done, currentState
+            print('------- Game Finished ----------')
+            return done, currentState, info
+
+        # Use utils module to discrete the info from the game
+        [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info)
+        newState = "%d:%d:%d" % (int(xdisc), int(zdisc), int(yawdisc))
 
 
-        newState = "%d:%d:%d" % (int(info['observation']["XPos"]), int(info['observation']["YPos"]),int(info['observation']["Yaw"]))
-        # If no Q Value for this state, Initialise
+        # If no Q Value for this state, initialise as all 0's
         if newState not in self.q_table:
             self.q_table[newState] = ([0] * len(self.actions))
 
@@ -98,7 +107,7 @@ class QLearningAgent(object):
             self.q_table[currentState][action] = oldQValueAction + self.alpha * (currentReward + self.gamma * max(
                 self.q_table[newState]) - oldQValueAction)
 
-        return done, newState
+        return done, newState, info
 
 
 
@@ -129,8 +138,6 @@ def main():
 
     #env.mission_spec = MalmoPython.MissionSpec(missionXML, True)
     #TODO - See how to do this?
-
-
 
     return
 

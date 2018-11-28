@@ -39,7 +39,9 @@ def actionCompleted(info1,info2,action):
         return True
     return False
 
+"""
 new_state, reward, done, info = env.step(0)
 print(discretiseState(info))
 new_state, reward, done, info = discreteMove(env,1, info)
 print(discretiseState(info))
+"""
