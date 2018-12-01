@@ -242,41 +242,6 @@ def loadMissionFile(filename):
         missionXML = file.read()
     return missionXML
 
-
-def rotateSeenBlocks(floor11x11x3, yaw):
-    # Presuming this blockInput to be 3 layers of 11x11 - in np.array as (3,11,11)
-
-    # Set a threshold, T, for the difference of yaw to the distinct 90 degrees
-    T = 15
-
-    # Initialise the blocks variable as a np.array (3,11,11)
-    blocks = np.zeros((3, 11, 11))
-
-    # Loop through the 3 heights in floor11x11x3
-    for i, level11x11 in enumerate(floor11x11x3):
-        # If at yaw = 0
-        if abs(yaw) < T:
-            # No rotation required
-            blocks[i] = level11x11
-        # If at yaw = 90
-        if abs(yaw - 90) < T:
-            # Rotate counter-clockwise 90
-            blocks[i] = np.rot90(level11x11, 1)
-        # If at yaw = 180
-        if abs(yaw - 180) < T:
-            # Rotate counter-clockwise 180
-            blocks[i] = np.rot90(level11x11, 2)
-        # If at yaw = 270
-        if abs(yaw - 270) < T:
-            # Rotate clockwise 90
-            blocks[i] = np.rot90(level11x11, -1)
-
-    # Generate the output block of 4x5 for each
-    seenBlocks3x4x5 = blocks[:, 0:4, 3:8]
-
-    return seenBlocks3x4x5
-    # Output is np.array as (3,4,5)
-
 def main():
     client_pool = [('127.0.0.1', 10000)]
     # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!

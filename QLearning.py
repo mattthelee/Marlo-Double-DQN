@@ -111,34 +111,13 @@ class QLearningAgent(object):
 
 
 
-def loadMissionFile(filename):
-    with open(filename, 'r') as file:
-        missionXML = file.read()
-    return missionXML
-
 def main():
-    client_pool = [('127.0.0.1', 10000)]
-    # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!
-    join_tokens = marlo.make('MarLo-FindTheGoal-v0', params={"client_pool": client_pool, 'suppress_info': False})
-    assert len(join_tokens) == 1
-    join_token = join_tokens[0]
-
-    env = marlo.init(join_token)
-    # Change the spec of the mission by loading xml from file
-    missionXML= loadMissionFile('find_the_goal_mission2.xml')
-    #missionXML= loadMissionFile('mission_spec')
-
+    env = utils.setupEnv('find_the_goal_mission2.xml')
     # Get the number of available actions
     actionSize = env.action_space.n
-    #TODO - Is this the best way to encode the actions??
 
     myAgent = QLearningAgent(actionSize)
-
     myAgent.runAgent(env)
-
-    #env.mission_spec = MalmoPython.MissionSpec(missionXML, True)
-    #TODO - See how to do this?
-
     return
 
 
