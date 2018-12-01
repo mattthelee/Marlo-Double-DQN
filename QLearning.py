@@ -99,9 +99,9 @@ class QLearningAgent(object):
                 self.epsilon *= self.epsilon_decay
             else:
                 self.epsilon = 0
-        with open(f"{self.__name__}.csv","w") as f:
-            wr = csv.writer(f)
-            wr.writerows(results)
+            with open("qlearningResults.csv","w") as f:
+                wr = csv.writer(f)
+                wr.writerows(results)
         return results
 
 
