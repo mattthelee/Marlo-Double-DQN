@@ -3,7 +3,7 @@ import numpy as np
 import random
 import json
 import utils
-import  csv
+import csv
 
 #TODO - How to load different missions? Answer: see the utils.setupEnv function
 
@@ -14,9 +14,8 @@ class QLearningAgent(object):
         self.gamma = gamma
         self.epsilon_min = 0.01
         self.epsilon = epsilon
-        self.epsilon_decay = 0.99
+        self.epsilon_decay = 0.90
         self.training = True if self.epsilon > 0 else False
-
         # Don't consider waiting action
         self.actions = [i for i in range(1,actions)]
 
@@ -29,31 +28,6 @@ class QLearningAgent(object):
             # Initialise the Q-Table from blank
             self.qTable = {}
         return
-
-    def startGame(self,env, i):
-        print(" ------- New Game ----------  \n")
-        #Store the Q-Table as a JSON
-        print("Saving QTable as JSON")
-        with open('QTable.json', 'w') as fp:
-            json.dump(self.qTable, fp)
-
-        if (i+1) % 10 == 0:
-            print("Saving QTable BackUp as JSON")
-            # Store a QTable BackUp too every 10 games
-            with open('QTableBackUp.json', 'w') as fp:
-                json.dump(self.qTable, fp)
-
-        # Initialise the MineCraft environment
-        obs = env.reset()
-        # Do an initial 'stop' step in order to get info from env
-        obs, currentReward, done, info = env.step(0)
-
-        # Use utils module to discretise the info from the game
-        [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info['observation'])
-        currentState = "%d:%d:%d" % (xdisc, zdisc, yawdisc)
-        print("initialState: " + currentState)
-        return currentState, info
-
 
     def runAgent(self,env):
         results = []
@@ -98,11 +72,37 @@ class QLearningAgent(object):
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
             else:
+                # Will take 458 rounds
                 self.epsilon = 0
             with open("qlearningResults.csv","w") as f:
                 wr = csv.writer(f)
                 wr.writerows(results)
         return results
+
+
+    def startGame(self,env, i):
+        print(" ------- New Game ----------  \n")
+        #Store the Q-Table as a JSON
+        print("Saving QTable as JSON")
+        with open('QTable.json', 'w') as fp:
+            json.dump(self.qTable, fp)
+
+        if (i+1) % 10 == 0:
+            print("Saving QTable BackUp as JSON")
+            # Store a QTable BackUp too every 10 games
+            with open('QTableBackUp.json', 'w') as fp:
+                json.dump(self.qTable, fp)
+
+        # Initialise the MineCraft environment
+        obs = env.reset()
+        # Do an initial 'stop' step in order to get info from env
+        obs, currentReward, done, info = env.step(0)
+
+        # Use utils module to discretise the info from the game
+        [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info['observation'])
+        currentState = "%d:%d:%d" % (xdisc, zdisc, yawdisc)
+        print("initialState: " + currentState)
+        return currentState, info
 
 
     def act(self, env, currentState, info):
@@ -137,7 +137,7 @@ def main():
     # Give user decision on loadind model or not
     load = input("Load Q Table? y/n - Default as y:________")
 
-    # Set the Agent to Load Q-Table if user chooses
+    # Set the Agent to Load Q-Table if user chooses to load
     if load.lower() == 'n':
         myAgent = QLearningAgent(actionSize)
     else:

@@ -1,4 +1,4 @@
-import MalmoPython
+from marlo import MalmoPython
 import json
 import marlo
 from numpy import genfromtxt
@@ -62,6 +62,11 @@ def discretiseState(obs,toNearest = [0.5,45]):
     zdisc = round(z / toNearest[0])*toNearest[0]
     # Round to nearest 45
     yawdisc = round(yaw / toNearest[1])*toNearest[1]
+    # Ensure the yaw is a positive output
+    if yawdisc == 360:
+        yawdisc = 0
+    if yawdisc < 0:
+        yawdisc = 360 + yawdisc
     pitchdisc = round(pitch/ toNearest[1])*toNearest[1]
     return [xdisc,ydisc,zdisc,yawdisc,pitchdisc]
 
