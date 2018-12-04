@@ -14,7 +14,7 @@ class QLearningAgent(object):
         self.gamma = gamma
         self.epsilon_min = 0.01
         self.epsilon = epsilon
-        self.epsilon_decay = 0.90
+        self.epsilon_decay = 0.99
         self.training = True if self.epsilon > 0 else False
         # Don't consider waiting action
         self.actions = [i for i in range(1,actions)]
@@ -50,7 +50,7 @@ class QLearningAgent(object):
                 oldInfo = info
                 # Use utils module to discrete the info from the game
                 [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info['observation'])
-                newState = "%d:%d:%d" % (xdisc, zdisc, yawdisc)
+                newState = "%d:%d:%d:%d:%d" % (xdisc, zdisc, yawdisc, ydisc, pitchdisc)
 
                 print('Q-Value for Current State: ')
                 print(self.qTable[currentState])
@@ -100,7 +100,7 @@ class QLearningAgent(object):
 
         # Use utils module to discretise the info from the game
         [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info['observation'])
-        currentState = "%d:%d:%d" % (xdisc, zdisc, yawdisc)
+        currentState = "%d:%d:%d:%d:%d" % (xdisc, zdisc, yawdisc, ydisc, pitchdisc)
         print("initialState: " + currentState)
         return currentState, info
 
@@ -115,7 +115,7 @@ class QLearningAgent(object):
         if random.random() < self.epsilon:
             # Choose a random action
             action = random.choice(self.actions)
-            print("From State %s (X,Z,Yaw), taking random action: %s" % (currentState, action))
+            print("From State %s (X,Z,Yaw,Y,Pitch), taking random action: %s" % (currentState, action))
         else:
             # Pick the highest Q-Value action for the current state
             currentStateActions = self.qTable[currentState]
@@ -125,7 +125,7 @@ class QLearningAgent(object):
             # Pick highest action Q-value - In case of tie (very unlikely) chooses first in list
             action = self.actions[np.argmax(currentStateActions)]
 
-            print("From State %s (X,Z,Yaw), taking q action: %s" % (currentState,  action))
+            print("From State %s (X,Z,Yaw,Y,Pitch), taking q action: %s" % (currentState,  action))
         return action
 
 
