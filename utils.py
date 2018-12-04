@@ -1,6 +1,9 @@
 import MalmoPython
 import json
 import marlo
+from numpy import genfromtxt
+from matplotlib import pyplot as plt
+
 
 # TODO work out why the agent continues to move forward after the 0 action has been issued.
 # Do we really need discrete actions or can we simply rely on the agent to decide?
@@ -128,6 +131,12 @@ def rotateSeenBlocks(floor11x11x3, yaw):
 
     return seenBlocks3x4x5
 
+def plotResults(file):
+    my_data = genfromtxt(file, delimiter=',')
+    y = [x[0] for x in my_data]
+    plt.plot(y)
+    input('waiting')
+    return
 '''
 new_state, reward, done, info = env.step(0)
 print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
