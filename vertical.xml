@@ -64,11 +64,11 @@
         <Height>240</Height>
       </VideoProducer>
       <ObservationFromFullStats />
-      <ContinuousMovementCommands turnSpeedDegs="180">
+      <DiscreteMovementCommands>
         <ModifierList type="deny-list">
           <command>attack</command>
         </ModifierList>
-      </ContinuousMovementCommands>
+      </DiscreteMovementCommands>
       <MissionQuitCommands/>
       <RewardForMissionEnd rewardForDeath="-10000">
         <Reward description="found_goal" reward="8000" />
