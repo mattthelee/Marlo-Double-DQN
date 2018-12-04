@@ -14,7 +14,7 @@ class QLearningAgent(object):
         self.gamma = gamma
         self.epsilon_min = 0.01
         self.epsilon = epsilon
-        self.epsilon_decay = 0.999
+        self.epsilon_decay = 0.99
         self.training = True if self.epsilon > 0 else False
 
         # Don't consider waiting action
