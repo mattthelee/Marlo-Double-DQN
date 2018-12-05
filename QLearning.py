@@ -5,23 +5,28 @@ import json
 import utils
 import csv
 
+MALMO_XSD_PATH = "C:\\Users\\benja\\Anaconda3\\pkgs\\Malmo-0.36.0-Windows-64bit_withBoost_Python3.6\\Schemas"
+
+
 #TODO - How to load different missions? Answer: see the utils.setupEnv function
 
 class QLearningAgent(object):
 
-    def __init__(self, actions, loadQTable = False, epsilon=1.0, alpha=0.1, gamma=0.9 ):
+    def __init__(self, actions, QTableName = 'QTable.json', CSVName = 'qlearningResults.csv', loadQTable = False, epsilon_decay=0.99, alpha=0.1, gamma=0.9 ):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon_min = 0.01
-        self.epsilon = epsilon
-        self.epsilon_decay = 0.99
+        self.epsilon = 1.0
+        self.epsilon_decay = epsilon_decay
         self.training = True if self.epsilon > 0 else False
         # Don't consider waiting action
         self.actions = [i for i in range(1,actions)]
+        self.QTableName = QTableName
+        self.CSVName = CSVName
 
         if loadQTable:
             # Load the Q-Table from a JSON
-            QTableFile = 'QTable.json'
+            QTableFile = self.QTableName
             with open(QTableFile) as f:
                 self.qTable = json.load(f)
         else:
@@ -31,7 +36,8 @@ class QLearningAgent(object):
 
     def runAgent(self,env):
         results = []
-        for i in range(1000):
+        for i in range(200):
+            print("Game " + str(i))
             currentState, info = self.startGame(env,i)
             actionCount = 0
             score = 0
@@ -66,7 +72,7 @@ class QLearningAgent(object):
                         self.qTable[newState]) - oldQValueAction)
                 currentState = newState
 
-            print(' ------- Game Finished ----------  \n')
+            print('\n ------- Game Finished ----------  \n')
             results.append([score,actionCount,oldInfo['observation']['TotalTime'], self.epsilon])
             # Decay the epsilon until the minimum
             if self.epsilon > self.epsilon_min:
@@ -74,9 +80,10 @@ class QLearningAgent(object):
             else:
                 # Will take 458 rounds
                 self.epsilon = 0
-            with open("qlearningResults.csv","w") as f:
+            with open(self.CSVName,"w") as f:
                 wr = csv.writer(f)
                 wr.writerows(results)
+
         return results
 
 
@@ -84,7 +91,7 @@ class QLearningAgent(object):
         print(" ------- New Game ----------  \n")
         #Store the Q-Table as a JSON
         print("Saving QTable as JSON")
-        with open('QTable.json', 'w') as fp:
+        with open(self.QTableName, 'w') as fp:
             json.dump(self.qTable, fp)
 
         if (i+1) % 10 == 0:
