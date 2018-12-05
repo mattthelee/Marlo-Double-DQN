@@ -146,9 +146,9 @@ def main():
 
     # Set the Agent to Load Q-Table if user chooses to load
     if load.lower() == 'n':
-        myAgent = QLearningAgent(actionSize)
+        myAgent = QLearningAgent(actionSize,'QTable.json', 'qlearningResults.csv' )
     else:
-        myAgent = QLearningAgent(actionSize, True)
+        myAgent = QLearningAgent(actionSize, 'QTable.json', 'qlearningResults.csv' , True)
 
     # Start the running of the Agent
     myAgent.runAgent(env)
