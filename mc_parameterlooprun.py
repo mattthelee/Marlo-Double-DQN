@@ -1,9 +1,9 @@
 
-from mc import MC_agent
-import utils
+from mc_loops.mc import MC_agent
+import mc_loops.utils
 
 def main():
-    env = utils.setupEnv('find_the_goal_mission2.xml')
+    env = mc_loops.utils.setupEnv('find_the_goal_mission2.xml')
     # Get the number of available actions, minus waiting action
     actionSize = env.action_space.n
 
