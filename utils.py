@@ -70,6 +70,18 @@ def discretiseState(obs,toNearest = [0.5,45]):
     pitchdisc = round(pitch/ toNearest[1])*toNearest[1]
     return [xdisc,ydisc,zdisc,yawdisc,pitchdisc]
 
+def completeAction(env,action):
+    # Actions do not always take effect immediately, therefore do an action and wait for state change before returning
+    image, reward, done, info = env.step(action)
+    if done:
+        return image, reward, done, info['observation']
+    # Check ten times if action has been completed
+    for i in range(10):
+        obs = json.loads(env._get_world_state().observations[-1].text)
+        if actionCompleted(info['observation'],obs,action):
+            break
+    return image, reward, done, info['observation']
+
 def actionCompleted(obs1,obs2,action):
     # If action is not a movement return false
     if action in [0,5,6]:

@@ -4,6 +4,7 @@ import random
 import json
 import utils
 import csv
+import pdb;
 
 MALMO_XSD_PATH = "C:\\Users\\benja\\Anaconda3\\pkgs\\Malmo-0.36.0-Windows-64bit_withBoost_Python3.6\\Schemas"
 
@@ -36,6 +37,7 @@ class QLearningAgent(object):
 
     def runAgent(self,env):
         results = []
+        history = []
         for i in range(200):
             print("Game " + str(i))
             currentState, info = self.startGame(env,i)
@@ -45,17 +47,17 @@ class QLearningAgent(object):
             while not done:
                 # Chose the action then run it
                 action = self.act(env, currentState, info)
-                obs, reward, done, info = env.step(action)
+                image, reward, done, obs = utils.completeAction(env,action)
                 # Continue counts of actions and scores
                 actionCount += 1
                 score += reward
-                # Check if game is done
+                # Check if game is done, if it is say new state is current state
                 if done:
-                    break
+                    info = oldInfo
                 # have to use this to keep last info for results
                 oldInfo = info
                 # Use utils module to discrete the info from the game
-                [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info['observation'])
+                [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(obs)
                 newState = "%d:%d:%d:%d:%d" % (xdisc, zdisc, yawdisc, ydisc, pitchdisc)
 
                 print('Q-Value for Current State: ')
@@ -70,6 +72,8 @@ class QLearningAgent(object):
                     oldQValueAction = self.qTable[currentState][self.actions.index(action)]
                     self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (reward + self.gamma * max(
                         self.qTable[newState]) - oldQValueAction)
+                #Record everything for analysis of why we get stuck:
+                history.append( [currentState,newState, action, reward, self.qTable[currentState]])
                 currentState = newState
 
             print('\n ------- Game Finished ----------  \n')
@@ -83,6 +87,9 @@ class QLearningAgent(object):
             with open(self.CSVName,"w") as f:
                 wr = csv.writer(f)
                 wr.writerows(results)
+            with open('historyDebug',"w") as f:
+                wr = csv.writer(f)
+                wr.writerows(history)
 
         return results
 
