@@ -141,8 +141,11 @@ class MC_agent(object):
 
 
 def main():
-    env = utils.setupEnv('find_the_goal_mission2.xml')
-    # Get the number of available actions, minus waiting action
+    if sys.argv[1]:
+        env = utils.setupEnv(sys.argv[1])
+    else:
+        env = utils.setupEnv()
+    # Get the number of available actions
     actionSize = env.action_space.n
 
     # Give user decision on loadind model or not
