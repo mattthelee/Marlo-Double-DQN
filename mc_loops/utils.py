@@ -86,7 +86,7 @@ def loadMissionFile(filename):
     return missionXML
 
 def setupEnv(filename='find_the_goal_mission2.xml', videoResolution = [84, 84]):
-    client_pool = [('127.0.0.1', 10000)]
+    client_pool = [('127.0.0.1', 10001)]
     # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!
     join_tokens = marlo.make('MarLo-FindTheGoal-v0', params={
         "client_pool": client_pool,
