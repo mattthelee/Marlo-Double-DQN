@@ -4,6 +4,7 @@ import random
 import json
 import utils
 import  csv
+import sys
 
 #TODO chnage this into mc
 
@@ -141,7 +142,7 @@ class MC_agent(object):
 
 
 def main():
-    if sys.argv[1]:
+    if len(sys.argv) > 1:
         env = utils.setupEnv(sys.argv[1])
     else:
         env = utils.setupEnv()

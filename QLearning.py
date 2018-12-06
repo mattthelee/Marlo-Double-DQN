@@ -136,7 +136,7 @@ class QLearningAgent(object):
 
 
 def main():
-    if sys.argv[1]:
+    if len(sys.argv) > 1:
         env = utils.setupEnv(sys.argv[1])
     else:
         env = utils.setupEnv()
