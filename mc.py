@@ -10,16 +10,17 @@ import sys
 
 class MC_agent(object):
 
-    def __init__(self, actions, loadQTable = False, epsilon=1.0, alpha=0.1):
+    def __init__(self, actions, mc_QTableName = 'mc_QTable.json', mc_CSVName = 'mc_qlearningResults.csv', loadQTable = False, epsilon_decay=0.99, alpha=0.1, gamma=0.9):
         self.alpha = alpha
+        self.gamma = gamma
         self.epsilon_min = 0.01
-        self.gamma = 0.01
-        self.epsilon = epsilon
-        self.epsilon_decay = 0.99
+        self.epsilon = 1.0
+        self.epsilon_decay = epsilon_decay
         self.training = True if self.epsilon > 0 else False
-
         # Don't consider waiting action
         self.actions = [i for i in range(1,actions)]
+        self.mc_QTableName = mc_QTableName
+        self.mc_CSVName = mc_CSVName
 
         if loadQTable:
             # Load the Q-Table from a JSON
@@ -33,8 +34,18 @@ class MC_agent(object):
 
 
 
-    def startGame(self,env, i):
+    def startGame(self,env,i):
         print(" ------- New Game ----------  \n")
+        #Store the Q-Table as a JSON
+        print("Saving mc_QTable as JSON")
+        with open(self.mc_QTableName, 'w') as fp:
+            json.dump(self.mc_qTable, fp)
+
+        if (i+1) % 10 == 0:
+            print("Saving mc_QTable BackUp as JSON")
+            # Store a QTable BackUp too every 10 games
+            with open('mc_QTableBackUp.json', 'w') as fp:
+                json.dump(self.mc_qTable, fp)
 
         # Initialise the MineCraft environment
         obs = env.reset()
@@ -43,7 +54,7 @@ class MC_agent(object):
 
         # Use utils module to discretise the info from the game
         [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info['observation'])
-        currentState = "%d:%d:%d" % (xdisc, zdisc, yawdisc)
+        currentState = "%d:%d:%d:%d:%d" % (xdisc, zdisc, yawdisc, ydisc, pitchdisc)
         print("initialState: " + currentState)
         return currentState, info
 
@@ -52,7 +63,8 @@ class MC_agent(object):
         results = []
         states_count = {}
 
-        for i in range(1000):
+        for i in range(200):
+            print("Game " + str(i))
             currentState, info = self.startGame(env,i)
             actionCount = 0
             score = 0
@@ -73,15 +85,13 @@ class MC_agent(object):
                 oldInfo = info
                 # Use utils module to discrete the info from the game
                 [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info['observation'])
-                newState = "%d:%d:%d" % (xdisc, zdisc, yawdisc)
+                newState = "%d:%d:%d:%d:%d" % (xdisc, zdisc, yawdisc, ydisc, pitchdisc)
 
                 if newState not in states_count:
                     states_count[newState] = ([0] * len(self.actions))
 
                 history.append([newState,action,reward])
                 states_count[newState][self.actions.index(action)] += 1.0
-
-
 
                 # Check if game is done
 
@@ -96,8 +106,8 @@ class MC_agent(object):
             # update Q-values for this action
                 return_val = reward + sum([ x[2] * self.gamma ** i for i , x in enumerate(history[t:])])
                 if self.training:
-                    oldQValueAction = self.mc_qTable[currentState][self.actions.index(action)]
-                    self.mc_qTable[ep_state][self.actions.index(ep_action)] = oldQValueAction + 1/states_count[newState][self.actions.index(action)] * \
+                    oldQValueAction = self.mc_qTable[ep_state][self.actions.index(ep_action)]
+                    self.mc_qTable[ep_state][self.actions.index(ep_action)] = oldQValueAction + 1/states_count[ep_state][self.actions.index(ep_action)] * \
                                                                               (return_val - oldQValueAction)
 
             print(' ------- Game Finished ----------  \n')
@@ -107,7 +117,7 @@ class MC_agent(object):
                 self.epsilon *= self.epsilon_decay
             else:
                 self.epsilon = 0
-            with open("qlearningResults.csv","w") as f:
+            with open("mc_qlearningResults.csv","w") as f:
                 wr = csv.writer(f)
                 wr.writerows(results)
         return results
@@ -129,7 +139,7 @@ class MC_agent(object):
             # Pick the highest Q-Value action for the current state
             currentStateActions = self.mc_qTable[currentState]
 
-            print('currentStateActionsQValues: ' + str(currentStateActions))
+            print('currentStateActions_mc_QValues: ' + str(currentStateActions))
 
             # Pick highest action Q-value - In case of tie (very unlikely) chooses first in list
             action = self.actions[np.argmax(currentStateActions)]
