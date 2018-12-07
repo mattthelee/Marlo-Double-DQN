@@ -53,7 +53,14 @@ class QLearningAgent(object):
                 score += reward
                 # Check if game is done, if it is say new state is current state
                 if done:
-                    info = oldInfo
+                    # update Q-values for this action
+                    if self.training:
+                        oldQValueAction = self.qTable[currentState][self.actions.index(action)]
+                        self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (
+                                    reward - oldQValueAction)
+                        print("Reward of %s added to the Q-Table at %s with action %s"  % (str(reward),currentState,action))
+
+                    break
                 # have to use this to keep last info for results
                 oldInfo = info
                 # Use utils module to discrete the info from the game
