@@ -73,8 +73,9 @@ def discretiseState(obs,toNearest = [0.5,45]):
 def completeAction(env,action):
     # Actions do not always take effect immediately, therefore do an action and wait for state change before returning
     # Because Marlo does not provide the reward for the action just taken but for the previous action, need to do wait action before
-    image, reward, done, info = env.step(0)
-    image, reward, done, info = env.step(action)
+    image, reward1, done, info = env.step(0)
+    image, reward2, done, info = env.step(action)
+    reward = reward1 + reward2
     if done:
         return image, reward, done, info['observation']
     # Check ten times if action has been completed
