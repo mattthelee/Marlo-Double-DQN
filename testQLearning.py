@@ -6,7 +6,7 @@ def main():
     # Get the number of available actions, minus waiting action
     actionSize = env.action_space.n
 
-    epsilonDecay = 0.96
+    epsilonDecay = 0.99
     alphas = [0.8]
     gammas = [1]
 

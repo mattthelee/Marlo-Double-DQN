@@ -74,7 +74,9 @@ def completeAction(env,action):
     # Actions do not always take effect immediately, therefore do an action and wait for state change before returning
     # Because Marlo does not provide the reward for the action just taken but for the previous action, need to do wait action before
     image, reward, done, info = env.step(0)
+
     image, reward, done, info = env.step(action)
+
     if done:
         return image, reward, done, info['observation']
     # Check ten times if action has been completed
@@ -82,11 +84,15 @@ def completeAction(env,action):
     for i in range(10):
         # If the game is over the observation history is 0
         if len(env._get_world_state().observations) == 0:
+            print("\n ----------- Goal Reached --------")
+            reward = 0.5
             done = True
             break
         obs = json.loads(env._get_world_state().observations[-1].text)
         if actionCompleted(info['observation'],obs,action):
+            # If the state has changed, return
             break
+            # If not changed after 10 tries (Walking into wall) - then stop
     return image, reward, done, obs
 
 def actionCompleted(obs1,obs2,action):

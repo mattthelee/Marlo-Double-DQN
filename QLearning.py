@@ -54,11 +54,20 @@ class QLearningAgent(object):
                 if done:
                     # update Q-values for this action
                     if self.training:
+                        currentStateActions = self.qTable[currentState]
+                        print('\nCurrentStateActionsQValues: ' + str(currentStateActions))
                         oldQValueAction = self.qTable[currentState][self.actions.index(action)]
                         self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (
                                     reward - oldQValueAction)
-                        print(f"Reward of {reward}")
 
+                        print("Reward of %s added to the Q-Table at %s with action %s" % (str(reward), currentState, action))
+                        currentStateActions = self.qTable[currentState]
+                        print('Updated CurrentStateActionsQValues: ' + str(currentStateActions))
+                        newQValueAction = self.qTable[currentState][self.actions.index(action)]
+                        print(
+                            "Q-Value difference for action %s of %s" % (action, abs(oldQValueAction - newQValueAction)))
+
+                        print("\n -------- Final Score: -------- %s" % (score))
                     break
 
                 # have to use this to keep last info for results
@@ -164,9 +173,9 @@ def main():
 
     # Set the Agent to Load Q-Table if user chooses to load
     if load.lower() == 'n':
-        myAgent = QLearningAgent(actionSize,200,'QTable.json', 'qlearningResults.csv', epsilon = 1 )
+        myAgent = QLearningAgent(actionSize,200,'QTable.json', 'qlearningResults.csv', epsilon = 1.0 )
     else:
-        myAgent = QLearningAgent(actionSize,200, 'QTable.json', 'qlearningResults.csv' , True, epsilon = 1)
+        myAgent = QLearningAgent(actionSize,200, 'QTable.json', 'qlearningResults.csv' , True, epsilon = 1.0)
 
     # Start the running of the Agent
     myAgent.runAgent(env)
