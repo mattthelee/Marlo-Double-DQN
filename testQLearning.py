@@ -7,15 +7,17 @@ def main():
     actionSize = env.action_space.n
 
     epsilonDecay = 0.99
-    alphas = [0.01,0.1,0.8]
-    gammas = [0.5,1]
+    alphas = [0.01, 0.1, 0.8]
+    gammas = [0.5, 1]
 
     for alpha in alphas:
         for gamma in gammas:
             QTableName = "QTable_Alpha_" + str(alpha).replace(".", "_") + "_Gamma_" + str(gamma).replace(".","_") + "_Decay_" + str(epsilonDecay).replace(".", "_") + ".json"
-            CSVName = "Results_Alpha_" + str(alpha).replace(".", "_") + "_Gamma_" + str(gamma).replace(".", "_")+ "_Decay_" + str(epsilonDecay).replace(".", "_") + ".csv"
+            CSVName = "Test_Results_Alpha_" + str(alpha).replace(".", "_") + "_Gamma_" + str(gamma).replace(".", "_")+ "_Decay_" + str(epsilonDecay).replace(".", "_") + ".csv"
 
-            myAgent = QLearningAgent(actionSize,250, QTableName,CSVName, False, epsilonDecay , alpha, gamma)
+            myAgent = QLearningAgent(actionSize, 5, QTableName,CSVName, True, epsilonDecay , alpha, gamma,0.00)
+
+            print("\n\n -------------- Starting test run of Decay %s, Alpha %s and Gamma %s --------- \n \n" % (epsilonDecay,alpha,gamma))
 
             # Start the running of the Agent
             myAgent.runAgent(env)
