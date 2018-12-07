@@ -72,30 +72,6 @@ def discretiseState(obs,toNearest = [0.5,45]):
     pitchdisc = round(pitch/ toNearest[1])*toNearest[1]
     return [xdisc,ydisc,zdisc,yawdisc,pitchdisc]
 
-def completeActionBackup(env,action):
-    # Actions do not always take effect immediately, therefore do an action and wait for state change before returning
-    # Because Marlo does not provide the reward for the action just taken but for the previous action, need to do wait action before
-    image, reward1, done, info = env.step(0)
-    sleep(0.1)
-    image, reward2, done, info = env.step(action)
-    # This sleep is required to let marlo 'settle' into its state. The state is then taken from the world state object
-    sleep(0.2)
-    reward = reward1 + reward2
-    # Tries to return the state by queying world state, it will fail if gameover though
-    # in which case it should do the action again to get the final reward
-    try:
-        #catches any misssed rewards
-        for _reward in env._get_world_state(),rewards:
-            print(f'debug4 {_reward}')
-            reward += _reward.getValue()
-        return image, reward, done, json.loads(env._get_world_state().observations[-1].text)
-    except:
-        print('debug1')
-        image, reward3, done, info = env.step(action)
-        reward += reward3
-        return image, reward, done, info['observation']
-
-
 def completeAction(env,action):
     # Actions do not always take effect immediately, therefore do an action and wait for state change before returning
     # Because Marlo does not provide the reward for the action just taken but for the previous action, need to do wait action before
@@ -107,7 +83,6 @@ def completeAction(env,action):
     reward = 0
     world_state = env._get_world_state()
     for _reward in world_state.rewards:
-        print(f'debug4 {_reward}')
         reward += _reward.getValue()
     # Tries to return the state by queying world state, it will fail if gameover though
     # in which case it should do the action again to get the final reward
@@ -123,10 +98,8 @@ def completeAction(env,action):
     if done:
         marlo.CrowdAiNotifier._episode_done()
     try:
-        #catches any misssed rewards
         return image, reward, done, json.loads(world_state.observations[-1].text)
     except:
-        print('debug1')
         image, reward3, done, info = env.step(action)
         reward += reward3
         return image, reward, done, info['observation']
