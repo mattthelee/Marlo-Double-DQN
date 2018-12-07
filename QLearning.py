@@ -3,25 +3,31 @@ import numpy as np
 import random
 import json
 import utils
+<<<<<<< HEAD
 import  csv
 import sys
+=======
+import csv
+import pdb;
+>>>>>>> master
 
 
 #TODO - How to load different missions? Answer: see the utils.setupEnv function
 
 class QLearningAgent(object):
 
-    def __init__(self, actions, QTableName = 'QTable.json', CSVName = 'qlearningResults.csv', loadQTable = False, epsilon_decay=0.99, alpha=0.1, gamma=0.9 ):
+    def __init__(self, actions, episodes = 200, QTableName = 'QTable.json', CSVName = 'qlearningResults.csv', loadQTable = False, epsilon_decay=0.99, alpha=0.8, gamma=0.9,epsilon = 1.0, training = True ):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon_min = 0.01
-        self.epsilon = 1.0
+        self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
-        self.training = True if self.epsilon > 0 else False
+        self.training = training
         # Don't consider waiting action
         self.actions = [i for i in range(1,actions)]
         self.QTableName = QTableName
         self.CSVName = CSVName
+        self.episodes = episodes
 
         if loadQTable:
             # Load the Q-Table from a JSON
@@ -35,30 +41,39 @@ class QLearningAgent(object):
 
     def runAgent(self,env):
         results = []
-        for i in range(200):
-            print("Game " + str(i))
-            currentState, info = self.startGame(env,i)
+        for i in range(self.episodes):
+            print("Game: " + str(i))
+            print("Epsilon: " + str(self.epsilon))
+            currentState, obs = self.startGame(env,i)
             actionCount = 0
             score = 0
             done  = False
             while not done:
                 # Chose the action then run it
-                action = self.act(env, currentState, info)
-                obs, reward, done, info = env.step(action)
+                action = self.act(env, currentState)
+                image, reward, done, obs = utils.completeAction(env,action)
                 # Continue counts of actions and scores
                 actionCount += 1
                 score += reward
-                # Check if game is done
+                # Check if game is done, if it is say new state is current state
                 if done:
+                    # update Q-values for this action
+                    if self.training:
+                        oldQValueAction = self.qTable[currentState][self.actions.index(action)]
+                        self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (
+                                    reward - oldQValueAction)
+                        print(f"Reward of {reward}")
+
                     break
+
                 # have to use this to keep last info for results
-                oldInfo = info
+                oldObs = obs
                 # Use utils module to discrete the info from the game
-                [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info['observation'])
+                [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(obs)
                 newState = "%d:%d:%d:%d:%d" % (xdisc, zdisc, yawdisc, ydisc, pitchdisc)
 
-                print('Q-Value for Current State: ')
-                print(self.qTable[currentState])
+                #print('Q-Value for Current State: ')
+                #print(self.qTable[currentState])
 
                 # If no Q Value for this state, Initialise
                 if newState not in self.qTable:
@@ -67,12 +82,12 @@ class QLearningAgent(object):
                 # update Q-values for this action
                 if self.training:
                     oldQValueAction = self.qTable[currentState][self.actions.index(action)]
-                    self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (reward + self.gamma * max(
-                        self.qTable[newState]) - oldQValueAction)
+                    self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (reward + self.gamma * max(self.qTable[newState]) - oldQValueAction)
+                    print(f"Reward of {reward}")
                 currentState = newState
 
             print('\n ------- Game Finished ----------  \n')
-            results.append([score,actionCount,oldInfo['observation']['TotalTime'], self.epsilon])
+            results.append([score,actionCount,oldObs['TotalTime'], self.epsilon])
             # Decay the epsilon until the minimum
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
@@ -82,7 +97,6 @@ class QLearningAgent(object):
             with open(self.CSVName,"w") as f:
                 wr = csv.writer(f)
                 wr.writerows(results)
-
         return results
 
 
@@ -111,7 +125,7 @@ class QLearningAgent(object):
         return currentState, info
 
 
-    def act(self, env, currentState, info):
+    def act(self, env, currentState):
 
         # If no Q Value for this state, Initialise
         if currentState not in self.qTable:
@@ -148,9 +162,9 @@ def main():
 
     # Set the Agent to Load Q-Table if user chooses to load
     if load.lower() == 'n':
-        myAgent = QLearningAgent(actionSize,'QTable.json', 'qlearningResults.csv' )
+        myAgent = QLearningAgent(actionSize,200,'QTable.json', 'qlearningResults.csv', epsilon = 1 )
     else:
-        myAgent = QLearningAgent(actionSize, 'QTable.json', 'qlearningResults.csv' , True)
+        myAgent = QLearningAgent(actionSize,200, 'QTable.json', 'qlearningResults.csv' , True, epsilon = 1)
 
     # Start the running of the Agent
     myAgent.runAgent(env)
