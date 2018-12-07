@@ -9,13 +9,13 @@ import  csv
 
 class MC_agent(object):
 
-    def __init__(self, actions, loadQTable = False, epsilon=1.0, alpha=0.1):
+    def __init__(self, actions, loadQTable = False, epsilon=1.0, alpha=0.1, training = True):
         self.alpha = alpha
         self.epsilon_min = 0.01
         self.gamma = 0.01
         self.epsilon = epsilon
         self.epsilon_decay = 0.99
-        self.training = True if self.epsilon > 0 else False
+        self.training = training
 
         # Don't consider waiting action
         self.actions = [i for i in range(1,actions)]
@@ -24,10 +24,10 @@ class MC_agent(object):
             # Load the Q-Table from a JSON
             mc_QTableFile = 'mc_QTable.json'
             with open(mc_QTableFile) as f:
-                self.mc_qTable = json.load(f)
+                self.qTable = json.load(f)
         else:
             # Initialise the Q-Table from blank
-            self.mc_qTable = {}
+            self.qTable = {}
         return
 
 
@@ -62,11 +62,16 @@ class MC_agent(object):
                 # Chose the action then run it
                 action = self.act(env, currentState)
                 image, reward, done, obs = utils.completeAction(env,action)
+                print(f"Reward of {reward}")
                 # Continue counts of actions and scores
                 actionCount += 1
                 score += reward
 
                 if done:
+                    if self.training:
+                        oldQValueAction = self.qTable[currentState][self.actions.index(action)]
+                        self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (
+                                    reward - oldQValueAction)
                     break
                 # have to use this to keep last info for results
                 oldObs = obs
@@ -85,28 +90,29 @@ class MC_agent(object):
                 # Check if game is done
 
                 print('Q-Value for Current State: ')
-                print(self.mc_qTable[currentState])
+                print(self.qTable[currentState])
 
                 # If no Q Value for this state, Initialise
-                if newState not in self.mc_qTable:
-                    self.mc_qTable[newState] = ([0] * len(self.actions))
+                if newState not in self.qTable:
+                    self.qTable[newState] = ([0] * len(self.actions))
 
             for t,[ep_state,ep_action,reward] in enumerate(history):
             # update Q-values for this action
                 return_val = reward + sum([ x[2] * self.gamma ** i for i , x in enumerate(history[t:])])
                 if self.training:
-                    oldQValueAction = self.mc_qTable[currentState][self.actions.index(action)]
-                    self.mc_qTable[ep_state][self.actions.index(ep_action)] = oldQValueAction + 1/states_count[newState][self.actions.index(action)] * \
+                    oldQValueAction = self.qTable[ep_state][self.actions.index(ep_action)]
+                    self.qTable[ep_state][self.actions.index(ep_action)] = oldQValueAction + 1/states_count[ep_state][self.actions.index(ep_action)] * \
                                                                               (return_val - oldQValueAction)
 
+
             print(' ------- Game Finished ----------  \n')
-            results.append([score,actionCount,oldInfo['observation']['TotalTime'], self.epsilon])
+            results.append([score,actionCount,oldObs['TotalTime'], self.epsilon])
             # Decay the epsilon until the minimum
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
             else:
                 self.epsilon = 0
-            with open("qlearningResults.csv","w") as f:
+            with open("mclearningResults.csv","w") as f:
                 wr = csv.writer(f)
                 wr.writerows(results)
         return results
@@ -116,8 +122,8 @@ class MC_agent(object):
 
 
         # If no Q Value for this state, Initialise
-        if currentState not in self.mc_qTable:
-            self.mc_qTable[currentState] = ([0] * len(self.actions))
+        if currentState not in self.qTable:
+            self.qTable[currentState] = ([0] * len(self.actions))
 
         # Select the next action
         if random.random() < self.epsilon:
@@ -126,7 +132,7 @@ class MC_agent(object):
             print("From State %s (X,Z,Yaw), taking random action: %s" % (currentState, action))
         else:
             # Pick the highest Q-Value action for the current state
-            currentStateActions = self.mc_qTable[currentState]
+            currentStateActions = self.qTable[currentState]
 
             print('currentStateActionsQValues: ' + str(currentStateActions))
 
