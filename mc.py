@@ -3,7 +3,8 @@ import numpy as np
 import random
 import json
 import utils
-import  csv
+import csv
+import sys
 
 #TODO chnage this into mc
 
@@ -40,7 +41,7 @@ class MC_agent(object):
         print("Saving mc_QTable as JSON")
         with open(self.QTableName, 'w') as fp:
             json.dump(self.qTable, fp)
-         if (i+1) % 10 == 0:
+        if (i+1) % 10 == 0:
             print("Saving mc_QTable BackUp as JSON")
             # Store a QTable BackUp too every 10 games
             with open('mc_QTableBackUp.json', 'w') as fp:
@@ -158,8 +159,11 @@ class MC_agent(object):
 
 
 def main():
-    env = utils.setupEnv('find_the_goal_mission2.xml')
-    # Get the number of available actions, minus waiting action
+    if len(sys.argv) > 1:
+        env = utils.setupEnv(sys.argv[1])
+    else:
+        env = utils.setupEnv()
+    # Get the number of available actions
     actionSize = env.action_space.n
 
     # Give user decision on loadind model or not

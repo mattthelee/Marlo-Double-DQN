@@ -3,8 +3,9 @@ import numpy as np
 import random
 import json
 import utils
+import sys
 import csv
-import pdb;
+import pdb
 
 
 #TODO - How to load different missions? Answer: see the utils.setupEnv function
@@ -164,8 +165,11 @@ class QLearningAgent(object):
 
 
 def main():
-    env = utils.setupEnv('find_the_goal_mission2.xml')
-    # Get the number of available actions, minus waiting action
+    if len(sys.argv) > 1:
+        env = utils.setupEnv(sys.argv[1])
+    else:
+        env = utils.setupEnv()
+    # Get the number of available actions
     actionSize = env.action_space.n
 
     # Give user decision on loadind model or not
