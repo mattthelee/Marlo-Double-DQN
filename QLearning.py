@@ -10,13 +10,13 @@ import csv
 
 class QLearningAgent(object):
 
-    def __init__(self, actions, episodes = 200, QTableName = 'QTable.json', CSVName = 'qlearningResults.csv', loadQTable = False, epsilon_decay=0.99, alpha=0.8, gamma=0.9,epsilon = 1.0 ):
+    def __init__(self, actions, episodes = 200, QTableName = 'QTable.json', CSVName = 'qlearningResults.csv', loadQTable = False, epsilon_decay=0.99, alpha=0.8, gamma=0.9,epsilon = 1.0, training = True ):
         self.alpha = alpha
         self.gamma = gamma
-        self.epsilon_min = 0.01
+        self.epsilon_min = 0.1
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
-        self.training = True if self.epsilon > 0 else False
+        self.training = training
         # Don't consider waiting action
         self.actions = [i for i in range(1,actions)]
         self.QTableName = QTableName
@@ -67,19 +67,30 @@ class QLearningAgent(object):
                 [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(info['observation'])
                 newState = "%d:%d:%d:%d:%d" % (xdisc, zdisc, yawdisc, ydisc, pitchdisc)
 
-                #print('Q-Value for Current State: ')
-                #print(self.qTable[currentState])
 
                 # If no Q Value for this state, Initialise
                 if newState not in self.qTable:
                     self.qTable[newState] = ([0] * len(self.actions))
 
+
+
                 # update Q-values for this action
                 if self.training:
                     oldQValueAction = self.qTable[currentState][self.actions.index(action)]
+                    currentStateActions = self.qTable[currentState]
+                    print('\nCurrentStateActionsQValues: ' + str(currentStateActions))
                     self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (reward + self.gamma * max(self.qTable[newState]) - oldQValueAction)
+                    #TODO - Is it anything to do with max(self.qTable[newState])?? - This would still be the current state if it walks into the wall
                     print("Reward of %s added to the Q-Table at %s with action %s" % (str(reward), currentState, action))
+
+                    currentStateActions = self.qTable[currentState]
+                    print('Updated CurrentStateActionsQValues: ' + str(currentStateActions))
+
+                    newQValueAction = self.qTable[currentState][self.actions.index(action)]
+                    print("Q-Value difference for action %s of %s"%(action,abs(oldQValueAction-newQValueAction)))
                 currentState = newState
+
+
 
             print('\n ------- Game Finished ----------  \n')
             results.append([score,actionCount,oldInfo['observation']['TotalTime'], self.epsilon])
@@ -136,7 +147,7 @@ class QLearningAgent(object):
             # Pick the highest Q-Value action for the current state
             currentStateActions = self.qTable[currentState]
 
-            print('currentStateActionsQValues: ' + str(currentStateActions))
+            #print('\nCurrentStateActionsQValues: ' + str(currentStateActions))
 
             # Pick highest action Q-value - In case of tie (very unlikely) chooses first in list
             action = self.actions[np.argmax(currentStateActions)]
