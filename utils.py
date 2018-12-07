@@ -72,24 +72,65 @@ def discretiseState(obs,toNearest = [0.5,45]):
     pitchdisc = round(pitch/ toNearest[1])*toNearest[1]
     return [xdisc,ydisc,zdisc,yawdisc,pitchdisc]
 
-def completeAction(env,action):
+def completeActionBackup(env,action):
     # Actions do not always take effect immediately, therefore do an action and wait for state change before returning
     # Because Marlo does not provide the reward for the action just taken but for the previous action, need to do wait action before
     image, reward1, done, info = env.step(0)
     sleep(0.1)
     image, reward2, done, info = env.step(action)
     # This sleep is required to let marlo 'settle' into its state. The state is then taken from the world state object
-    sleep(0.1)
+    sleep(0.2)
     reward = reward1 + reward2
     # Tries to return the state by queying world state, it will fail if gameover though
     # in which case it should do the action again to get the final reward
     try:
+        #catches any misssed rewards
+        for _reward in env._get_world_state(),rewards:
+            print(f'debug4 {_reward}')
+            reward += _reward.getValue()
         return image, reward, done, json.loads(env._get_world_state().observations[-1].text)
     except:
         print('debug1')
         image, reward3, done, info = env.step(action)
         reward += reward3
         return image, reward, done, info['observation']
+
+
+def completeAction(env,action):
+    # Actions do not always take effect immediately, therefore do an action and wait for state change before returning
+    # Because Marlo does not provide the reward for the action just taken but for the previous action, need to do wait action before
+    env._take_action(0)
+    sleep(0.1)
+    env._take_action(action)
+    # This sleep is required to let marlo 'settle' into its state. The state is then taken from the world state object
+    sleep(0.2)
+    reward = 0
+    world_state = env._get_world_state()
+    for _reward in world_state.rewards:
+        print(f'debug4 {_reward}')
+        reward += _reward.getValue()
+    # Tries to return the state by queying world state, it will fail if gameover though
+    # in which case it should do the action again to get the final reward
+    # Get observation
+    image = env._get_video_frame(world_state)
+
+    # detect if done ?
+    done = not world_state.is_mission_running or any(world_state.errors)
+
+    # Notify evaluation system, if applicable
+    # marlo.CrowdAiNotifier._env_action(action)
+    marlo.CrowdAiNotifier._step_reward(reward)
+    if done:
+        marlo.CrowdAiNotifier._episode_done()
+    try:
+        #catches any misssed rewards
+        return image, reward, done, json.loads(world_state.observations[-1].text)
+    except:
+        print('debug1')
+        image, reward3, done, info = env.step(action)
+        reward += reward3
+        return image, reward, done, info['observation']
+
 
 def actionCompleted(obs1,obs2,action):
     # If action is not a movement return false
