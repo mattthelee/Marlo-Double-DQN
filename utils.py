@@ -104,20 +104,21 @@ def loadMissionFile(filename):
         missionXML = file.read()
     return missionXML
 
-def setupEnv(filename='find_the_goal_mission2.xml', videoResolution = [84, 84]):
+def setupEnv(mission='MarLo-FindTheGoal-v0', videoResolution = [800, 600]):
     client_pool = [('127.0.0.1', 10000)]
     # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!
-    join_tokens = marlo.make('MarLo-FindTheGoal-v0', params={
+    join_tokens = marlo.make(mission, params={
         "client_pool": client_pool,
         'suppress_info': False,
-        'videoResolution': videoResolution})
+        'videoResolution': videoResolution,
+        'tick_length': 50})
     # As this is a single agent scenario,
     # there will just be a single token
     assert len(join_tokens) == 1
     join_token = join_tokens[0]
     env = marlo.init(join_token)
     # Change the spec of the mission by loading xml from file
-    missionXML= loadMissionFile(filename)
+    missionXML= loadMissionFile(mission+'.xml')
     env.mission_spec = MalmoPython.MissionSpec(missionXML, True)
     return env
 
