@@ -41,7 +41,7 @@ class MC_agent(object):
         print("Saving mc_QTable as JSON")
         with open(self.QTableName, 'w') as fp:
             json.dump(self.qTable, fp)
-         if (i+1) % 10 == 0:
+        if (i+1) % 10 == 0:
             print("Saving mc_QTable BackUp as JSON")
             # Store a QTable BackUp too every 10 games
             with open('mc_QTableBackUp.json', 'w') as fp:
