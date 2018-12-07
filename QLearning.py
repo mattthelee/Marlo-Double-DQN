@@ -3,13 +3,9 @@ import numpy as np
 import random
 import json
 import utils
-<<<<<<< HEAD
-import  csv
 import sys
-=======
 import csv
-import pdb;
->>>>>>> master
+import pdb
 
 
 #TODO - How to load different missions? Answer: see the utils.setupEnv function

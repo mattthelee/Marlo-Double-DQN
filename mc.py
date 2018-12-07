@@ -3,11 +3,8 @@ import numpy as np
 import random
 import json
 import utils
-import  csv
-<<<<<<< HEAD
+import csv
 import sys
-=======
->>>>>>> master
 
 #TODO chnage this into mc
 
