@@ -3,6 +3,8 @@ import json
 import marlo
 from numpy import genfromtxt
 from matplotlib import pyplot as plt
+import pdb
+from time import sleep
 
 
 # TODO work out why the agent continues to move forward after the 0 action has been issued.
@@ -74,21 +76,20 @@ def completeAction(env,action):
     # Actions do not always take effect immediately, therefore do an action and wait for state change before returning
     # Because Marlo does not provide the reward for the action just taken but for the previous action, need to do wait action before
     image, reward1, done, info = env.step(0)
+    sleep(0.1)
     image, reward2, done, info = env.step(action)
+    # This sleep is required to let marlo 'settle' into its state. The state is then taken from the world state object
+    sleep(0.1)
     reward = reward1 + reward2
-    if done:
+    # Tries to return the state by queying world state, it will fail if gameover though
+    # in which case it should do the action again to get the final reward
+    try:
+        return image, reward, done, json.loads(env._get_world_state().observations[-1].text)
+    except:
+        print('debug1')
+        image, reward3, done, info = env.step(action)
+        reward += reward3
         return image, reward, done, info['observation']
-    # Check ten times if action has been completed
-    obs = info['observation']
-    for i in range(10):
-        # If the game is over the observation history is 0
-        if len(env._get_world_state().observations) == 0:
-            done = True
-            break
-        obs = json.loads(env._get_world_state().observations[-1].text)
-        if actionCompleted(info['observation'],obs,action):
-            break
-    return image, reward, done, obs
 
 def actionCompleted(obs1,obs2,action):
     # If action is not a movement return false
