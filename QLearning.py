@@ -47,7 +47,8 @@ class QLearningAgent(object):
             while not done:
                 # Chose the action then run it
                 action = self.act(env, currentState)
-                image, reward, done, obs = utils.completeAction(env,action)
+                image,reward,done, info = env.step(action)
+                obs = info['observation']
                 # Continue counts of actions and scores
                 actionCount += 1
                 score += reward
@@ -59,7 +60,6 @@ class QLearningAgent(object):
                         self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (
                                     reward - oldQValueAction)
                         print(f"Reward of {reward}")
-
                     break
 
                 # have to use this to keep last info for results
