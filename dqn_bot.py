@@ -241,6 +241,10 @@ def main():
     # Can start from a pre-built model
     load = input("Load model? y/n or an epsilon value to continue: ")
     block_map_shape = (4,4,3)
+    myagent = agent(observation_shape, action_size,block_map_shape)
+    #pdb.set_trace()
+    scores = trainAgent(env, myagent)
+    '''
     if load == 'y':
         myagent = agent(observation_shape, action_size, block_map_shape,True,0.1)
         #pdb.set_trace()
@@ -253,9 +257,8 @@ def main():
         #TODO - how come the 'epsilon value' runs still load a model??
         myagent = agent(observation_shape, action_size, block_map_shape,True,float(load))
         scores = trainAgent(env,myagent)
-
-    print (scores)
-    np.savetxt('scores',np.array(scores))
+    '''
+    np.savetxt('dqn_botscores',np.array(scores))
     #plt.plot(scores)
     #plt.show()
     return
