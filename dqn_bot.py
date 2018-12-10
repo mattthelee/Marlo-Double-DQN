@@ -13,6 +13,7 @@ import MalmoPython
 import sys
 import utils
 import csv
+from time import sleep
 
 import pdb
 from keras.backend import manual_variable_initialization
@@ -44,6 +45,8 @@ def trainAgent(env, agent):
     for i in range(initial_games):
         reward = 0
         game_score = 0
+        # Short wait required to prevent loss of connection to marlo
+        sleep(2)
         env.reset()
         state = env.last_image
         # For each step of taken action
@@ -78,6 +81,11 @@ def trainAgent(env, agent):
         with open(agent.CSVName,"w") as f:
             wr = csv.writer(f)
             wr.writerows(results)
+        # Decay the epsilon until the minimum
+        if agent.epsilon > agent.epsilon_min:
+            agent.epsilon *= agent.epsilon_decay
+        else:
+            agent.epsilon = 0
     # Update the storage of the model
     model_yaml = agent.model.to_yaml()
     with open("model.yaml", "w") as yaml_file:
@@ -117,11 +125,11 @@ class agent:
         self.block_list = ['air','cobblestone','stone','gold_block']
         self.block_vision_size = len(self.block_list) * block_map_shape[0] * block_map_shape[1]
         self.memory = deque(maxlen=2000)
-        self.gamma = 0.95    # discount rate
+        self.gamma = 1.0    # discount rate
         self.epsilon_min = 0.01
         self.epsilon = epsilon
         self.epsilon_decay = 0.999
-        self.learning_rate = 0.001
+        self.learning_rate = 0.5
         self.CSVName = 'dqn_bot_results.csv'
 
         if load_model_file:
@@ -200,12 +208,6 @@ class agent:
 
         # Use the training data to fit the model, via the batch
         self.model.fit(np.asarray(x_train),np.asarray(y_train),epochs=1,verbose=0)
-
-        # Decay the epsilon until the minimum
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
-        else:
-            self.epsilon = 0
         return
 
     def blockEncoder(floorList):
