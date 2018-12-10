@@ -19,16 +19,16 @@
      </ServerInitialConditions>
     <ServerHandlers>
       <FlatWorldGenerator generatorString="3;7,220*1,5*3,2;3;,biome_1" />
-      <ClassroomDecorator seed="3">
+      <ClassroomDecorator seed="__SEED__">
         <specification>
           <width>7</width>
-          <height>10</height>
+          <height>20</height>
           <length>7</length>
           <pathLength>2</pathLength>
           <divisions>
             <southNorth>0</southNorth>
             <eastWest>0</eastWest>
-            <aboveBelow>1</aboveBelow>
+            <aboveBelow>2</aboveBelow>
           </divisions>
           <horizontalObstacles>
             <gap>0</gap>
@@ -38,7 +38,7 @@
             <jump>0</jump>
           </horizontalObstacles>
           <verticalObstacles>
-	    <stairs>0</stairs>
+            <stairs>1</stairs>
             <ladder>1</ladder>
             <jump>0</jump>
           </verticalObstacles>
@@ -53,7 +53,7 @@
   <AgentSection mode="Survival">
     <Name> {{ params.agent_names[0] }} </Name>
     <AgentStart>
-      <Placement x="203.5" y="2000.0" z="217.5"/>
+      <Placement x="-203.5" y="81.0" z="217.5"/>
     </AgentStart>
     <AgentHandlers>
       <VideoProducer want_depth="false">
@@ -71,7 +71,7 @@
 
       <MissionQuitCommands/>
       <RewardForSendingCommand reward="-0.01"/>
-      <RewardForMissionEnd rewardForDeath="-1">
+      <RewardForMissionEnd rewardForDeath="-10000">
         <Reward description="found_goal" reward="0.5" />
         <Reward description="out_of_time" reward="-0.1" />
       </RewardForMissionEnd>

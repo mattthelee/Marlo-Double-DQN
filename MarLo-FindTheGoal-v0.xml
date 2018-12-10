@@ -68,12 +68,14 @@
             <max x="5" y="1" z="5"/>
           </Grid>
       </ObservationFromGrid>
+
       <DiscreteMovementCommands>
         <ModifierList type="allow-list">
           <command>move</command>
           <command>turn</command>
         </ModifierList>
       </DiscreteMovementCommands>
+
       <MissionQuitCommands/>
       <RewardForSendingCommand reward="-0.01"/>
       <RewardForMissionEnd rewardForDeath="-1">
