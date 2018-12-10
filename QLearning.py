@@ -223,7 +223,7 @@ def main():
         env = utils.setupEnv()
     """
 
-    #env = utils.setupEnv('MarLo-Vertical-v0')
+    #nenv = utils.setupEnv('MarLo-Vertical-v0')
     env = utils.setupEnv('MarLo-CliffWalking-v0')
     #env = utils.setupEnv()
 
