@@ -64,31 +64,17 @@
         <Height>240</Height>
       </VideoProducer>
       <ObservationFromFullStats />
-<<<<<<< HEAD:MarLo-Attic-v0.xml
-      <DiscreteMovementCommands>
-        <ModifierList type="allow-list">
-          <command>move</command>
-          <command>turn</command>
-	  <command>jumpmove</command>
-=======
       <ContinuousMovementCommands turnSpeedDegs="180">
         <ModifierList type="deny-list">
           <command>attack</command>
           <command>jump</command>
->>>>>>> master:MarLo-Vertical-v0.xml
         </ModifierList>
       </ContinuousMovementCommands>
       <MissionQuitCommands/>
       <RewardForSendingCommand reward="-0.01"/>
-<<<<<<< HEAD:MarLo-Attic-v0.xml
-      <RewardForMissionEnd rewardForDeath="-10000">
-        <Reward description="found_goal" reward="1000" />
-        <Reward description="out_of_time" reward="0" />
-=======
       <RewardForMissionEnd rewardForDeath="-1">
         <Reward description="found_goal" reward="0.5" />
         <Reward description="out_of_time" reward="-0.1" />
->>>>>>> master:MarLo-Vertical-v0.xml
       </RewardForMissionEnd>
       <RewardForTouchingBlockType>
         <Block type="gold_ore diamond_ore redstone_ore" reward="0.5" />
