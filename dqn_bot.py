@@ -239,7 +239,7 @@ def main():
     action_size = env.action_space.n
     #pdb.set_trace()
     # Can start from a pre-built model
-    load = input("Load model? y/n or an epsilon value to continue: ")
+    #load = input("Load model? y/n or an epsilon value to continue: ")
     block_map_shape = (4,4,3)
     myagent = agent(observation_shape, action_size,block_map_shape)
     #pdb.set_trace()
