@@ -119,6 +119,12 @@ class QLearningAgent(object):
                     # Update this Q-Function following the Bellman Equation
                     self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (reward + self.gamma * max(self.qTable[newState]) - oldQValueAction)
                     print("Reward of %s added to the Q-Table at %s with action %s" % (str(reward), currentState, action))
+                    if reward > 0:
+                        print("\n\n\n\n ------- Positive Reward -------------------------------------------------------------------------------------------------- \n\n")
+                    if reward < -0.5:
+                        print(
+                            "\n\n\n\n ------- Large Negative Reward -------------------------------------------------------------------------------------------------- \n\n")
+
 
                     # Find the new Q-Functions for this state and print to screen
                     currentStateActions = self.qTable[currentState]
@@ -224,8 +230,8 @@ def main():
         env = utils.setupEnv()
     """
 
-    #nenv = utils.setupEnv('MarLo-Vertical-v0')
-    env = utils.setupEnv('MarLo-CliffWalking-v0')
+    env = utils.setupEnv('MarLo-Vertical-v0')
+    #env = utils.setupEnv('MarLo-CliffWalking-v0')
     #env = utils.setupEnv()
 
     # Get the number of available actions
@@ -238,9 +244,9 @@ def main():
 
     # Set the Agent to Load Q-Table if user chooses to load
     if load.lower() == 'n':
-        myAgent = QLearningAgent(actionSize,200,'QTable.json', 'qlearningResults.csv', epsilon = 0.0 )
+        myAgent = QLearningAgent(actionSize,200,'QTable.json', 'qlearningResults.csv', epsilon = 1.0 )
     else:
-        myAgent = QLearningAgent(actionSize,200, 'QTable.json', 'qlearningResults.csv' , True, epsilon = 0.0)
+        myAgent = QLearningAgent(actionSize,200, 'QTable.json', 'qlearningResults.csv' , True, epsilon = 1.0)
 
     # Start the running of the Agent
     myAgent.runAgent(env)
