@@ -6,13 +6,14 @@ import utils
 import sys
 import csv
 import pdb
+from time import sleep
 
 
 #TODO - How to load different missions? Answer: see the utils.setupEnv function
 
 class QLearningAgent(object):
 
-    def __init__(self, actions, episodes = 200, QTableName = 'QTable.json', CSVName = 'qlearningResults.csv', loadQTable = False, epsilon_decay=0.99, alpha=0.8, gamma=0.9,epsilon = 1.0, training = True ):
+    def __init__(self, actions, episodes = 200, QTableName = 'QTable.json', CSVName = 'qlearningResults.csv', loadQTable = False, epsilon_decay=0.97, alpha=0.5, gamma=1,epsilon = 1.0, training = True ):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon_min = 0.1
@@ -38,8 +39,9 @@ class QLearningAgent(object):
     def runAgent(self,env):
         results = []
         for i in range(self.episodes):
-            print("Game: " + str(i))
+            print("Game: " + str(i + 1))
             print("Epsilon: " + str(self.epsilon))
+            print("Training: " + str(self.training))
             currentState, obs = self.startGame(env,i)
             actionCount = 0
             score = 0
@@ -48,6 +50,10 @@ class QLearningAgent(object):
                 # Chose the action then run it
                 action = self.act(env, currentState)
                 image, reward, done, obs = utils.completeAction(env,action)
+                # Map the actions back to the 5 & 6 for the Q-Table
+                if action == 7: action = 5
+                if action == 8: action = 6
+                #oldObs = obs
                 # Continue counts of actions and scores
                 actionCount += 1
                 score += reward
@@ -65,8 +71,7 @@ class QLearningAgent(object):
                         currentStateActions = self.qTable[currentState]
                         print('Updated CurrentStateActionsQValues: ' + str(currentStateActions))
                         newQValueAction = self.qTable[currentState][self.actions.index(action)]
-                        print(
-                            "Q-Value difference for action %s of %s" % (action, abs(oldQValueAction - newQValueAction)))
+                        print("Q-Value difference for action %s of %s" % (action, abs(oldQValueAction - newQValueAction)))
 
                         print("\n -------- Final Score: -------- %s" % (score))
                     break
@@ -81,7 +86,6 @@ class QLearningAgent(object):
                 # If no Q Value for this state, Initialise
                 if newState not in self.qTable:
                     self.qTable[newState] = ([0] * len(self.actions))
-
 
 
                 # update Q-values for this action
@@ -102,7 +106,11 @@ class QLearningAgent(object):
                 currentState = newState
 
             print('\n ------- Game Finished ----------  \n')
-            results.append([score,actionCount,oldObs['TotalTime'], self.epsilon])
+            # Have this in for cliff-walking, as can die on first action, so there is no "oldObs" present
+            try:
+                results.append([score,actionCount,oldObs['TotalTime'], self.epsilon])
+            except:
+                results.append([score, actionCount, 0, self.epsilon])
             # Decay the epsilon until the minimum
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
@@ -129,6 +137,7 @@ class QLearningAgent(object):
                 json.dump(self.qTable, fp)
 
         # Initialise the MineCraft environment
+        sleep(2)
         obs = env.reset()
         # Do an initial 'stop' step in order to get info from env
         obs, currentReward, done, info = env.step(0)
@@ -150,6 +159,9 @@ class QLearningAgent(object):
         if random.random() < self.epsilon:
             # Choose a random action
             action = random.choice(self.actions)
+            # Map the 5 and 6 actions to the correct looking actions
+            #if action == 5: action = 7
+            #if action == 6: action = 8
             print("From State %s (X,Z,Yaw,Y,Pitch), taking random action: %s" % (currentState, action))
         else:
             # Pick the highest Q-Value action for the current state
@@ -159,18 +171,29 @@ class QLearningAgent(object):
 
             # Pick highest action Q-value - In case of tie (very unlikely) chooses first in list
             action = self.actions[np.argmax(currentStateActions)]
-
+            # Map the 5 and 6 actions to the correct looking actions
+            #if action == 5: action = 7
+            #if action == 6: action = 8
             print("From State %s (X,Z,Yaw,Y,Pitch), taking q action: %s" % (currentState,  action))
         return action
 
 
 def main():
+    """
     if len(sys.argv) > 1:
         env = utils.setupEnv(sys.argv[1])
     else:
         env = utils.setupEnv()
+    """
+
+    env = utils.setupEnv('MarLo-Vertical-v0')
+    #env = utils.setupEnv('MarLo-CliffWalking-v0')
+    #env = utils.setupEnv()
+
     # Get the number of available actions
     actionSize = env.action_space.n
+    #actionSize = 5
+    #actionSize = 9
 
     # Give user decision on loadind model or not
     load = input("Load Q Table? y/n - Default as y:________")

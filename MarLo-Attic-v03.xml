@@ -62,10 +62,8 @@
       </VideoProducer>
       <ObservationFromFullStats />
       <DiscreteMovementCommands>
-        <ModifierList type="allow-list">
-          <command>move</command>
-          <command>turn</command>
-	  <command>jumpmove</command>
+        <ModifierList type="deny-list">
+          <command>attack</command>
         </ModifierList>
       </DiscreteMovementCommands>
       <MissionQuitCommands/>
