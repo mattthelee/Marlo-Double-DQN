@@ -12,6 +12,7 @@ from past.utils import old_div # tutorial 5
 import MalmoPython
 import sys
 import utils
+import csv
 
 import pdb
 from keras.backend import manual_variable_initialization
