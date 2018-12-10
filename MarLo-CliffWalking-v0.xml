@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
   <About>
     <Summary>Cliff walking mission based on Sutton and Barto.</Summary>
   </About>
-
   <ModSettings>
       <MsPerTick> 50 </MsPerTick>
   </ModSettings>
-
   <ServerSection>
       <ServerInitialConditions>
             <Time>
@@ -33,12 +30,12 @@
       <ServerQuitWhenAnyAgentFinishes/>
     </ServerHandlers>
   </ServerSection>
-
   <AgentSection mode="Survival">
     <Name>{{ params.agent_names[0] }}</Name>
     <AgentStart>
       <Placement x="4.5" y="46.0" z="1.5" pitch="30" yaw="0"/>
     </AgentStart>
+        <!-- coordinates for cuboid are inclusive -->
     <AgentHandlers>
       <ObservationFromFullStats/>
       <VideoProducer want_depth="false">
@@ -50,17 +47,17 @@
             <command>attack</command>
           </ModifierList>
       </DiscreteMovementCommands>
+        <!-- coordinates for cuboid are inclusive -->
       <MissionQuitCommands/>
       <RewardForTouchingBlockType>
         <Block reward="-1.0" type="lava" behaviour="onceOnly"/>
         <Block reward="0.5" type="lapis_block" behaviour="onceOnly"/>
       </RewardForTouchingBlockType>
-      <--RewardForSendingCommand reward="-0.01"/>
+      <RewardForSendingCommand reward="-0.01"/>
       <AgentQuitFromTouchingBlockType>
           <Block type="lava" description="drowned_in_lava"/>
           <Block type="lapis_block" description="found_goal"/>
       </AgentQuitFromTouchingBlockType>
     </AgentHandlers>
   </AgentSection>
-
 </Mission>

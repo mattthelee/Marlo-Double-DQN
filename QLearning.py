@@ -148,6 +148,8 @@ class QLearningAgent(object):
 def main():
     if len(sys.argv) > 1:
         env = utils.setupEnv(sys.argv[1])
+    elif len(sys.argv) > 2:
+        env = utils.setupEnv(sys.argv[1], port=sys.argv[2])
     else:
         env = utils.setupEnv()
     # Get the number of available actions
