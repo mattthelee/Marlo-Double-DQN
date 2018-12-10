@@ -3,8 +3,7 @@
   <About>
     <Summary>Find the goal! Without a lift...</Summary>
   </About>
-
-  <ModSettings>
+	<ModSettings>
       <MsPerTick>50</MsPerTick>
   </ModSettings>
 
@@ -61,6 +60,11 @@
         <Height>240</Height>
       </VideoProducer>
       <ObservationFromFullStats />
+      <DiscreteMovementCommands>
+        <ModifierList type="allow-list">
+          <command>move</command>
+          <command>turn</command>
+	  <command>jumpmove</command>
       <ContinuousMovementCommands turnSpeedDegs="180">
         <ModifierList type="deny-list">
           <command>attack</command>

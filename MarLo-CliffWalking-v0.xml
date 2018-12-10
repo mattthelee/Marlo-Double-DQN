@@ -23,8 +23,8 @@
         <DrawCuboid x1="-2" y1="45" z1="-2" x2="7" y2="45" z2="18" type="lava" />           <!-- lava floor -->
         <DrawCuboid x1="1"  y1="45" z1="1"  x2="3" y2="45" z2="12" type="sandstone" />      <!-- floor of the arena -->
         <DrawBlock   x="4"   y="45"  z="1"  type="cobblestone" />                           <!-- the starting marker -->
-        <DrawBlock   x="4"   y="45"  z="12" type="lapis_block" />                           <!-- the destination marker -->
-        <DrawItem    x="4"   y="46"  z="12" type="diamond" />                               <!-- another destination marker -->
+        <DrawBlock    x="4"   y="45"  z="12" type="gold_block" />                               <!-- another destination marker -->
+        <DrawItem    x="4"   y="46"  z="12" type="gold_block" />                               <!-- another destination marker -->
       </DrawingDecorator>
       <ServerQuitFromTimeUp timeLimitMs="20000"/>
       <ServerQuitWhenAnyAgentFinishes/>
@@ -51,12 +51,14 @@
       <MissionQuitCommands/>
       <RewardForTouchingBlockType>
         <Block reward="-1.0" type="lava" behaviour="onceOnly"/>
-        <Block reward="0.5" type="lapis_block" behaviour="onceOnly"/>
+        <Block reward="0.5" type="diamond_block" behaviour="onceOnly"/>
+	<Block reward="0.5" type="gold_block"/>
       </RewardForTouchingBlockType>
       <RewardForSendingCommand reward="-0.01"/>
       <AgentQuitFromTouchingBlockType>
           <Block type="lava" description="drowned_in_lava"/>
-          <Block type="lapis_block" description="found_goal"/>
+          <Block type="diamond_block" description="found_goal"/>
+	  <Block description="found_goal" type="gold_block"/>
       </AgentQuitFromTouchingBlockType>
     </AgentHandlers>
   </AgentSection>

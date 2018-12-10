@@ -27,6 +27,51 @@ def discretiseState(obs,toNearest = [0.5,45]):
     pitchdisc = round(pitch/ toNearest[1])*toNearest[1]
     return [xdisc,ydisc,zdisc,yawdisc,pitchdisc]
 
+def completeAction(env,action):
+    # Actions do not always take effect immediately, therefore do an action and wait for state change before returning
+    # Because Marlo does not provide the reward for the action just taken but for the previous action, need to do wait action before
+    env._take_action(0)
+    sleep(0.1)
+    env._take_action(action)
+    # This sleep is required to let marlo 'settle' into its state. The state is then taken from the world state object
+    sleep(0.2)
+    reward = 0
+    world_state = env._get_world_state()
+    for _reward in world_state.rewards:
+        reward += _reward.getValue()
+    # Tries to return the state by queying world state, it will fail if gameover though
+    # in which case it should do the action again to get the final reward
+    # Get observation
+    image = env._get_video_frame(world_state)
+
+    # detect if done ?
+    done = not world_state.is_mission_running or any(world_state.errors)
+
+    # Notify evaluation system, if applicable
+    # marlo.CrowdAiNotifier._env_action(action)
+    marlo.CrowdAiNotifier._step_reward(reward)
+    if done:
+        marlo.CrowdAiNotifier._episode_done()
+    try:
+        return image, reward, done, json.loads(world_state.observations[-1].text)
+    except:
+        image, reward3, done, info = env.step(action)
+        reward += reward3
+        return image, reward, done, info['observation']
+
+
+
+def actionCompleted(obs1,obs2,action):
+    # If action is not a movement return false
+    if action in [0,5,6]:
+        return False
+    # If discretised position or angle has changed return true
+    if abs(max([a -b for a,b in zip(discretiseState(obs1),discretiseState(obs2))], key=abs
+)) > 0:
+        return True
+    return False
+
+
 def loadMissionFile(filename):
     with open(filename, 'r') as file:
         missionXML = file.read()
