@@ -6,51 +6,6 @@ from matplotlib import pyplot as plt
 import pdb
 from time import sleep
 
-
-# TODO work out why the agent continues to move forward after the 0 action has been issued.
-# Do we really need discrete actions or can we simply rely on the agent to decide?
-# Perhaps, given the interia of the agent, we should include the last action taken in the state
-def discreteMove(env, action, info):
-    # Max Number of waits of each action to perform.
-    actionReps = [1,10,10,10,10,1,1,10,10]
-    totalReward = 0
-    obs1 = info['observation']
-    new_state, reward, done, info = env.step(action)
-    totalReward += reward
-    # Wait until action has changed the state
-    for i in range(actionReps[action]):
-        # Get world state passes back differently to
-        obs = json.loads(env._get_world_state().observations[-1].text)
-        print(discretiseState(obs))
-        if done or actionCompleted(obs1,obs,action):
-            break
-    # Stop doing the action
-    new_state, reward, done, info = env.step(0)
-    print(discretiseState(info['observation']))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    print(discretiseState(json.loads(env._get_world_state().observations[-1].text)))
-    totalReward += reward
-    return new_state, totalReward, done, info
-
 def discretiseState(obs,toNearest = [0.5,45]):
     # Takes in info dictionary and returns the x,y,z,yaw,pitch discretised as list
     x = obs['XPos']
@@ -116,19 +71,21 @@ def actionCompleted(obs1,obs2,action):
         return True
     return False
 
+
 def loadMissionFile(filename):
     with open(filename, 'r') as file:
         missionXML = file.read()
     return missionXML
 
-def setupEnv(mission='MarLo-FindTheGoal-v0', videoResolution = [800, 600]):
-    client_pool = [('127.0.0.1', 10000)]
-    # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!
+def setupEnv(mission='MarLo-FindTheGoal-v0', videoResolution = [800, 600], port=10000):
+    client_pool = [('127.0.0.1', port)]
+    # Step sleep at to 0.2 to handle lag between marlo and Malmo
     join_tokens = marlo.make(mission, params={
         "client_pool": client_pool,
         'suppress_info': False,
         'videoResolution': videoResolution,
-        'tick_length': 50})
+        'tick_length': 50,
+        'step_sleep': 0.2})
     # As this is a single agent scenario,
     # there will just be a single token
     assert len(join_tokens) == 1

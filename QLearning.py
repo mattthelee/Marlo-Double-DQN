@@ -49,11 +49,13 @@ class QLearningAgent(object):
             while not done:
                 # Chose the action then run it
                 action = self.act(env, currentState)
-                image, reward, done, obs = utils.completeAction(env,action)
+                #image, reward, done, obs = utils.completeAction(env,action)
                 # Map the actions back to the 5 & 6 for the Q-Table
                 if action == 7: action = 5
                 if action == 8: action = 6
                 #oldObs = obs
+                image,reward,done, info = env.step(action)
+                obs = info['observation']
                 # Continue counts of actions and scores
                 actionCount += 1
                 score += reward
@@ -74,6 +76,7 @@ class QLearningAgent(object):
                         print("Q-Value difference for action %s of %s" % (action, abs(oldQValueAction - newQValueAction)))
 
                         print("\n -------- Final Score: -------- %s" % (score))
+
                     break
 
                 # have to use this to keep last info for results

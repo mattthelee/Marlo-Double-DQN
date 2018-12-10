@@ -73,7 +73,8 @@ class MC_agent(object):
             while not done:
                 # Chose the action then run it
                 action = self.act(env, currentState)
-                image, reward, done, obs = utils.completeAction(env,action)
+                image,reward,done, info = env.step(action)
+                obs = info['observation']
                 print(f"Reward of {reward}")
                 # Continue counts of actions and scores
                 actionCount += 1
@@ -96,11 +97,7 @@ class MC_agent(object):
 
                 history.append([newState,action,reward])
                 states_count[newState][self.actions.index(action)] += 1.0
-
-
-
-                # Check if game is done
-
+                
                 print('Q-Value for Current State: ')
                 print(self.qTable[currentState])
 

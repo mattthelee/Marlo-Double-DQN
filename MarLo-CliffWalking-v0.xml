@@ -56,10 +56,10 @@
       <MissionQuitCommands/>
       <RewardForSendingCommand reward="-0.01"/>
       <RewardForTouchingBlockType>
-        <Block reward="-100.0" type="lava" behaviour="onceOnly"/>
-        <Block reward="100.0" type="lapis_block" behaviour="onceOnly"/>
+        <Block reward="-1.0" type="lava" behaviour="onceOnly"/>
+        <Block reward="0.5" type="lapis_block" behaviour="onceOnly"/>
       </RewardForTouchingBlockType>
-      <!--RewardForSendingCommand reward="-1"/-->
+      <--RewardForSendingCommand reward="-0.01"/>
       <AgentQuitFromTouchingBlockType>
           <Block type="lava" description="drowned_in_lava"/>
           <Block type="lapis_block" description="found_goal"/>
