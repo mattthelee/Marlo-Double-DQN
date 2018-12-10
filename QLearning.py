@@ -13,7 +13,7 @@ from time import sleep
 class QLearningAgent(object):
 
     # Initialisation of the Class
-    def __init__(self, actions, episodes = 200, QTableName = 'QTable.json', CSVName = 'qlearningResults.csv', loadQTable = False, epsilon_decay=0.97, alpha=0.5, gamma=1,epsilon = 1.0, training = True ):
+    def __init__(self, actions, episodes = 200, QTableName = 'QTable.json', CSVName = 'qlearningResults.csv', loadQTable = False, epsilon_decay=0.99, alpha=0.5, gamma=1,epsilon = 1.0, training = True ):
         self.alpha = alpha # Given Alpha
         self.gamma = gamma # Given Gamma
         self.epsilon_min = 0.1 # Set Epsilon-Min,
@@ -167,6 +167,7 @@ class QLearningAgent(object):
                 json.dump(self.qTable, fp)
 
         # Initialise the MineCraft environment
+        # Add a sleep to ensure connection to the environment
         sleep(2)
         obs = env.reset()
         # Do an initial 'stop' step in order to get info from the environment
@@ -228,8 +229,8 @@ def main():
     #env = utils.setupEnv()
 
     # Get the number of available actions
-    actionSize = env.action_space.n
-    #actionSize = 5
+    #actionSize = env.action_space.n
+    actionSize = 5
     #actionSize = 9
 
     # Give user decision on loading model or not
@@ -237,9 +238,9 @@ def main():
 
     # Set the Agent to Load Q-Table if user chooses to load
     if load.lower() == 'n':
-        myAgent = QLearningAgent(actionSize,200,'QTable.json', 'qlearningResults.csv', epsilon = 1.0 )
+        myAgent = QLearningAgent(actionSize,200,'QTable.json', 'qlearningResults.csv', epsilon = 0.0 )
     else:
-        myAgent = QLearningAgent(actionSize,200, 'QTable.json', 'qlearningResults.csv' , True, epsilon = 1.0)
+        myAgent = QLearningAgent(actionSize,200, 'QTable.json', 'qlearningResults.csv' , True, epsilon = 0.0)
 
     # Start the running of the Agent
     myAgent.runAgent(env)
