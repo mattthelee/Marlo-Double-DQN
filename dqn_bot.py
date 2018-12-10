@@ -10,6 +10,8 @@ from keras.models import model_from_yaml
 from matplotlib import pyplot as plt
 from past.utils import old_div # tutorial 5
 import MalmoPython
+import sys
+import utils
 
 import pdb
 from keras.backend import manual_variable_initialization
@@ -36,6 +38,7 @@ def trainAgent(env, agent):
     # Batch for back-propagation
     batch_size = 16
     scores = deque(maxlen=50)
+    results = []
     # Loop over the games initialised
     for i in range(initial_games):
         reward = 0
@@ -60,6 +63,7 @@ def trainAgent(env, agent):
                 break
             game_score += reward
             state = new_state
+            oldInfo = info
 
             # This memory is the last seen game images
             if len(agent.memory) > batch_size:
@@ -68,6 +72,11 @@ def trainAgent(env, agent):
                 # Perform backpropagation
                 agent.replay(randomBatch)
 
+        results.append([game_score,j,oldInfo['observation']['TotalTime'], agent.epsilon])
+        # Save results so far
+        with open(agent.CSVName,"w") as f:
+            wr = csv.writer(f)
+            wr.writerows(results)
     # Update the storage of the model
     model_yaml = agent.model.to_yaml()
     with open("model.yaml", "w") as yaml_file:
@@ -105,13 +114,15 @@ class agent:
         self.observation_shape = observation_shape
         self.action_size = action_size
         self.block_list = ['air','cobblestone','stone','gold_block']
-        self.block_vision_size = len(block_list) * block_map_shape[0] * block_map_shape[1]
+        self.block_vision_size = len(self.block_list) * block_map_shape[0] * block_map_shape[1]
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95    # discount rate
         self.epsilon_min = 0.01
         self.epsilon = epsilon
         self.epsilon_decay = 0.999
         self.learning_rate = 0.001
+        self.CSVName = 'dqn_bot_results.csv'
+
         if load_model_file:
             # If you want to load a previous model
             # This is required to stop tensorflow reinitialising weights on model load
@@ -123,6 +134,7 @@ class agent:
             yaml_file.close()
             self.model = model_from_yaml(loaded_model_yaml)
             self.model.load_weights('model_weights.h5')
+            self.model.compile(loss='mse', optimizer='rmsprop')
         else:
             # Start from scratch
             self.model = self.create_model()
@@ -142,7 +154,7 @@ class agent:
         model.add(Flatten())
         model.add(Dense(128,activation='relu'))
         model.add(Dense(64,activation='relu'))
-        model.add(Dense(self.action_size + self.block_vision_size,activation='linear'))
+        model.add(Dense(self.action_size,activation='linear'))
         model.compile(loss='mse', optimizer='rmsprop')
         return model
 
@@ -217,28 +229,15 @@ def loadMissionFile(filename):
     return missionXML
 
 def main():
-    client_pool = [('127.0.0.1', 10000)]
-    # Suppress info set to false to allow the agent to train using additional features, this will be off for testing!
-    join_tokens = marlo.make('MarLo-FindTheGoal-v0', params={
-        "client_pool": client_pool,
-        'suppress_info': False,
-        'videoResolution': [84, 84]})
-    # As this is a single agent scenario,
-    # there will just be a single token
-    assert len(join_tokens) == 1
-    join_token = join_tokens[0]
-
-    env = marlo.init(join_token)
-    # Change the spec of the mission by loading xml from file
-    missionXML= loadMissionFile('find_the_goal_mission2.xml')
-    #missionXML= loadMissionFile('mission_spec')
-
-    env.mission_spec = MalmoPython.MissionSpec(missionXML, True)
+    if len(sys.argv) > 1:
+        env = utils.setupEnv(sys.argv[1])
+    else:
+        env = utils.setupEnv()
 
     #  Get the number of available states and actions - generates the output of CNN
     observation_shape = env.observation_space.shape
     action_size = env.action_space.n
-    pdb.set_trace()
+    #pdb.set_trace()
     # Can start from a pre-built model
     load = input("Load model? y/n or an epsilon value to continue: ")
     block_map_shape = (4,4,3)
@@ -248,7 +247,7 @@ def main():
         scores = testAgent(env,myagent)
     elif load == 'n':
         myagent = agent(observation_shape, action_size,block_map_shape)
-        pdb.set_trace()
+        #pdb.set_trace()
         scores = trainAgent(env, myagent)
     else:
         #TODO - how come the 'epsilon value' runs still load a model??

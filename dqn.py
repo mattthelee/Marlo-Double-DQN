@@ -209,7 +209,7 @@ if DEBUG_ON:
 # GAME SELECTION AND CONNECTION TO THE CLIENT
 
 # Ensure that you have a minecraft-client running with : marlo-server --port 10000
-client_pool = [('127.0.0.1', 10000)]
+client_pool = [('127.0.0.1', 10020)]
 if DEBUG_ON:
     print("Game:", GAME)
 join_tokens = marlo.make(GAME,
