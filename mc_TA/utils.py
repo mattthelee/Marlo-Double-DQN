@@ -77,7 +77,7 @@ def loadMissionFile(filename):
         missionXML = file.read()
     return missionXML
 
-def setupEnv(mission='MarLo-Vertical-v0.xml', videoResolution = [800, 600], port=10030):
+def setupEnv(mission='MarLo-Vertical-v0.xml', videoResolution = [800, 600], port=10050):
     client_pool = [('127.0.0.1', port)]
     # Step sleep at to 0.2 to handle lag between marlo and Malmo
     join_tokens = marlo.make(mission, params={

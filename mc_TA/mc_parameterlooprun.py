@@ -4,7 +4,7 @@ import utils
 
 
 def main():
-    env = utils.setupEnv("MarLo-Vertical-v0")
+    env = utils.setupEnv("MarLo-TrickyArena-v0")
     # Get the number of available actions, minus waiting action
     actionSize = env.action_space.n
 
