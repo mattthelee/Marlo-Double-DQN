@@ -9,8 +9,9 @@ def main():
     actionSize = env.action_space.n
 
     epsilonDecay = 0.97
-    alphas = [0.01,0.08]
+    alphas = [0.8, 0.5, 0.1]
     gammas = [1,0.5]
+
 
     for alpha in alphas:
         for gamma in gammas:
