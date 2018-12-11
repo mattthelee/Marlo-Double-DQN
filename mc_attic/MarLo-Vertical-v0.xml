@@ -3,7 +3,8 @@
   <About>
     <Summary>Find the goal! Without a lift...</Summary>
   </About>
-	<ModSettings>
+
+  <ModSettings>
       <MsPerTick>50</MsPerTick>
   </ModSettings>
 
@@ -18,16 +19,16 @@
      </ServerInitialConditions>
     <ServerHandlers>
       <FlatWorldGenerator generatorString="3;7,220*1,5*3,2;3;,biome_1" />
-      <ClassroomDecorator seed="__SEED__">
+      <ClassroomDecorator seed="3">
         <specification>
           <width>7</width>
-          <height>20</height>
+          <height>10</height>
           <length>7</length>
           <pathLength>2</pathLength>
           <divisions>
             <southNorth>0</southNorth>
             <eastWest>0</eastWest>
-            <aboveBelow>2</aboveBelow>
+            <aboveBelow>1</aboveBelow>
           </divisions>
           <horizontalObstacles>
             <gap>0</gap>
@@ -37,7 +38,7 @@
             <jump>0</jump>
           </horizontalObstacles>
           <verticalObstacles>
-            <stairs>1</stairs>
+	    <stairs>0</stairs>
             <ladder>1</ladder>
             <jump>0</jump>
           </verticalObstacles>
@@ -52,25 +53,22 @@
   <AgentSection mode="Survival">
     <Name> {{ params.agent_names[0] }} </Name>
     <AgentStart>
-      <Placement x="-203.5" y="81.0" z="217.5"/>
+      <Placement x="203.5" y="2000.0" z="217.5"/>
     </AgentStart>
     <AgentHandlers>
       <VideoProducer want_depth="false">
-        <Width>320</Width>
-        <Height>240</Height>
+        <Width>800</Width>
+        <Height>600</Height>
       </VideoProducer>
       <ObservationFromFullStats />
+
       <DiscreteMovementCommands>
         <ModifierList type="allow-list">
           <command>move</command>
           <command>turn</command>
-	  <command>jumpmove</command>
-      <ContinuousMovementCommands turnSpeedDegs="180">
-        <ModifierList type="deny-list">
-          <command>attack</command>
-          <command>jump</command>
         </ModifierList>
-      </ContinuousMovementCommands>
+      </DiscreteMovementCommands>
+
       <MissionQuitCommands/>
       <RewardForSendingCommand reward="-0.01"/>
       <RewardForMissionEnd rewardForDeath="-1">
