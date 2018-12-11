@@ -7,7 +7,7 @@ def main():
     #actionSize = env.action_space.n
     actionSize = 5;
 
-    epsilonDecay = 0.97
+    epsilonDecay = 0.98
     #alphas = [0.8,0.5,0.1]
     #gammas = [1,0.5]
 

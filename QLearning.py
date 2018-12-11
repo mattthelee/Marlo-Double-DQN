@@ -195,7 +195,7 @@ class QLearningAgent(object):
             self.qTable[currentState] = ([0] * len(self.actions))
 
         # Select the next action
-        
+
         # If the random number is less than epsilon, choose a random action
         if random.random() < self.epsilon:
             # Choose a random action from the given actions
