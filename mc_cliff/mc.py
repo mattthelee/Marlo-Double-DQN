@@ -14,7 +14,7 @@ class MC_agent(object):
         self.alpha = alpha
         self.epsilon_min = 0.01
         self.gamma = gamma
-        self.epsilon = epsilon
+        self.epsilon = 1
         self.epsilon_decay = epsilon_decay
         self.training = training
         self.mc_QTableName = mc_QTableName

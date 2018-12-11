@@ -195,14 +195,13 @@ class QLearningAgent(object):
             self.qTable[currentState] = ([0] * len(self.actions))
 
         # Select the next action
-        # If the random number less than epsilon, choose a random action
+        
+        # If the random number is less than epsilon, choose a random action
         if random.random() < self.epsilon:
             # Choose a random action from the given actions
             action = random.choice(self.actions)
-            # Map the 5 and 6 actions to the correct looking actions
-            #if action == 5: action = 7
-            #if action == 6: action = 8
             print("From State %s (X,Z,Yaw,Y,Pitch), taking random action: %s" % (currentState, action))
+
         # If the random number more than epsilon, choose the best action
         else:
             # Pick the highest Q-Value action for the current state
@@ -210,10 +209,6 @@ class QLearningAgent(object):
 
             # Pick highest action Q-value - In case of tie chooses first in list
             action = self.actions[np.argmax(currentStateActions)]
-
-            # Map the 5 and 6 actions to the correct looking actions
-            #if action == 5: action = 7
-            #if action == 6: action = 8
             print("From State %s (X,Z,Yaw,Y,Pitch), taking q action: %s" % (currentState,  action))
 
         # Returns the chosen action to the game
@@ -230,14 +225,14 @@ def main():
         env = utils.setupEnv()
     """
 
-    env = utils.setupEnv('MarLo-Vertical-v0')
+
+    env = utils.setupEnv('MarLo-TrickyArena-v0')
     #env = utils.setupEnv('MarLo-CliffWalking-v0')
     #env = utils.setupEnv()
 
     # Get the number of available actions
     #actionSize = env.action_space.n
     actionSize = 5
-    #actionSize = 9
 
     # Give user decision on loading model or not
     load = input("Load Q Table? y/n - Default as y:________")
