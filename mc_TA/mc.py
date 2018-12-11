@@ -14,7 +14,7 @@ class MC_agent(object):
         self.alpha = alpha
         self.epsilon_min = 0.01
         self.gamma = gamma
-        self.epsilon = epsilon
+        self.epsilon = 1
         self.epsilon_decay = epsilon_decay
         self.training = training
         self.mc_QTableName = mc_QTableName
@@ -28,10 +28,10 @@ class MC_agent(object):
             # Load the Q-Table from a JSON
             mc_QTableFile = 'mc_QTable.json'
             with open(mc_QTableFile) as f:
-                self.qTable = json.load(f)
+                self.mc_qTable = json.load(f)
         else:
             # Initialise the Q-Table from blank
-            self.qTable = {}
+            self.mc_qTable = {}
         return
 
 
@@ -41,12 +41,12 @@ class MC_agent(object):
         #Store the Q-Table as a JSON
         print("Saving mc_QTable as JSON")
         with open(self.mc_QTableName, 'w') as fp:
-            json.dump(self.qTable, fp)
+            json.dump(self.mc_qTable, fp)
         if (i+1) % 10 == 0:
             print("Saving mc_QTable BackUp as JSON")
             # Store a QTable BackUp too every 10 games
             with open('mc_QTableBackUp.json', 'w') as fp:
-                json.dump(self.qTable, fp)
+                json.dump(self.mc_qTable, fp)
         # Initialise the MineCraft environment
         time.sleep(5)
         obs = env.reset()
@@ -78,41 +78,49 @@ class MC_agent(object):
                 image,reward,done, info = env.step(action)
                 obs = info['observation']
                 print(f"Reward of {reward}")
+
+                if reward > 0:
+                    print("\n\n\n ------- HIGH REWARD ------------------------- \n\n")
                 # Continue counts of actions and scores
                 actionCount += 1
                 score += reward
 
+                history.append([currentState, action, reward])
+
+                if currentState not in states_count:
+                    states_count[currentState] = ([0] * len(self.actions))
+
+                states_count[currentState][self.actions.index(action)] += 1.0
+
+
+
                 if done:
-                    if self.training:
-                        oldQValueAction = self.qTable[currentState][self.actions.index(action)]
-                        self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (
-                                    reward - oldQValueAction)
                     break
+
                 # have to use this to keep last info for results
                 oldObs = obs
                 # Use utils module to discrete the info from the game
                 [xdisc, ydisc, zdisc, yawdisc, pitchdisc] = utils.discretiseState(obs)
                 newState = "%d:%d:%d:%d:%d" % (xdisc, zdisc, yawdisc, ydisc, pitchdisc)
 
-                if newState not in states_count:
-                    states_count[newState] = ([0] * len(self.actions))
-
-                history.append([newState,action,reward])
-                states_count[newState][self.actions.index(action)] += 1.0
-                
-                print('Q-Value for Current State: ')
-                print(self.qTable[currentState])
 
                 # If no Q Value for this state, Initialise
-                if newState not in self.qTable:
-                    self.qTable[newState] = ([0] * len(self.actions))
+                if newState not in self.mc_qTable:
+                    self.mc_qTable[newState] = ([0] * len(self.actions))
+                
+                print('Q-Value for Current State: ')
+                print(self.mc_qTable[currentState])
+
+                currentState = newState
+
+
 
             for t,[ep_state,ep_action,reward] in enumerate(history):
             # update Q-values for this action
                 return_val = reward + sum([ x[2] * self.gamma ** i for i , x in enumerate(history[t:])])
                 if self.training:
-                    oldQValueAction = self.qTable[ep_state][self.actions.index(ep_action)]
-                    self.qTable[ep_state][self.actions.index(ep_action)] = oldQValueAction + 1/states_count[ep_state][self.actions.index(ep_action)] * \
+                    oldQValueAction = self.mc_qTable[ep_state][self.actions.index(ep_action)]
+                    self.mc_qTable[ep_state][self.actions.index(ep_action)] = oldQValueAction + 1/states_count[ep_state][self.actions.index(ep_action)] * \
                                                                               (return_val - oldQValueAction)
 
 
@@ -126,6 +134,8 @@ class MC_agent(object):
             with open(self.mc_CSVName,"w") as f:
                 wr = csv.writer(f)
                 wr.writerows(results)
+
+
         return results
 
 
@@ -133,8 +143,8 @@ class MC_agent(object):
 
 
         # If no Q Value for this state, Initialise
-        if currentState not in self.qTable:
-            self.qTable[currentState] = ([0] * len(self.actions))
+        if currentState not in self.mc_qTable:
+            self.mc_qTable[currentState] = ([0] * len(self.actions))
 
         # Select the next action
         if random.random() < self.epsilon:
@@ -143,7 +153,7 @@ class MC_agent(object):
             print("From State %s (X,Z,Yaw), taking random action: %s" % (currentState, action))
         else:
             # Pick the highest Q-Value action for the current state
-            currentStateActions = self.qTable[currentState]
+            currentStateActions = self.mc_qTable[currentState]
 
             print('currentStateActionsQValues: ' + str(currentStateActions))
 
