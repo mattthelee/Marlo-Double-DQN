@@ -2,7 +2,7 @@ from QLearning import QLearningAgent
 import utils
 
 def main():
-    env = utils.setupEnv('MarLo-Vertical-v0')
+    env = utils.setupEnv('MarLo-TrickyArena-v0')
     # Get the number of available actions, minus waiting action
     #actionSize = env.action_space.n
     actionSize = 5;
@@ -11,7 +11,7 @@ def main():
     #alphas = [0.8,0.5,0.1]
     #gammas = [1,0.5]
 
-    alphas = [0.8]
+    alphas = [0.5]
     gammas = [1]
 
 
