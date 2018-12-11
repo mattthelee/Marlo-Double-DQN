@@ -156,12 +156,13 @@ class agent:
         # This max pooling layer is quite extreme because of memory limits on machine
         model.add(AveragePooling2D(pool_size=(8, 8), input_shape=(self.observation_shape)))
 
-        model.add(Conv2D(32, 8, 4)) # Convolutions set to same as in Lample and Chaplet
-        model.add(Conv2D(64, 4, 2)) # Convolutions set to same as in Lample and Chaplet
+        model.add(Conv2D(32, 8, 4))
+        model.add(Conv2D(16, 4, 2))
+        model.add(MaxPooling2D(pool_size=(4,4)))
 
         # Flatten needed to get a single vector as output otherwise get a matrix
         model.add(Flatten())
-        model.add(Dense(128,activation='relu'))
+        model.add(Dense(64,activation='relu'))
         model.add(Dense(64,activation='relu'))
         model.add(Dense(self.action_size,activation='linear'))
         model.compile(loss='mse', optimizer='rmsprop')
