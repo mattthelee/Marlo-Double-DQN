@@ -137,8 +137,8 @@ class agent:
         self.CSVName = 'dqn_bot_results.csv'
 
         if load_model_file:
-            self.model = loadModelFromFile('model')
-            self.secondaryDQN = loadModelFromFile('secondary')
+            self.model = self.loadModelFromFile('model')
+            self.secondaryDQN = self.loadModelFromFile('secondary')
         else:
             # Start from scratch
             self.model = self.create_model()
@@ -252,7 +252,7 @@ def main():
     if len(sys.argv) > 1:
         env = utils.setupEnv(sys.argv[1])
     else:
-        env = utils.setupEnv()
+        env = utils.setupEnv(port=10021)
 
     #  Get the number of available states and actions - generates the output of CNN
     observation_shape = env.observation_space.shape
@@ -261,7 +261,7 @@ def main():
     # Can start from a pre-built model
     #load = input("Load model? y/n or an epsilon value to continue: ")
     block_map_shape = (4,4,3)
-    myagent = agent(observation_shape, action_size,block_map_shape, False,1.0)
+    myagent = agent(observation_shape, action_size,block_map_shape, True,0.20849246173476127)
     #pdb.set_trace()
     scores = trainAgent(env, myagent)
     '''
