@@ -128,7 +128,7 @@ class agent:
         self.gamma = 1.0    # discount rate
         self.epsilon_min = 0.01
         self.epsilon = epsilon
-        self.epsilon_decay = 0.99
+        self.epsilon_decay = 0.999
         self.learning_rate = 0.5
         self.CSVName = 'dqn_bot_results.csv'
 
@@ -236,7 +236,7 @@ def main():
     if len(sys.argv) > 1:
         env = utils.setupEnv(sys.argv[1])
     else:
-        env = utils.setupEnv(port=10020)
+        env = utils.setupEnv(mission='MarLo-TrickyArena-v0',port=10022)
 
     #  Get the number of available states and actions - generates the output of CNN
     observation_shape = env.observation_space.shape
@@ -245,7 +245,7 @@ def main():
     # Can start from a pre-built model
     #load = input("Load model? y/n or an epsilon value to continue: ")
     block_map_shape = (4,4,3)
-    myagent = agent(observation_shape, action_size,block_map_shape, True,0)
+    myagent = agent(observation_shape, action_size,block_map_shape)
     #pdb.set_trace()
     scores = trainAgent(env, myagent)
     '''
