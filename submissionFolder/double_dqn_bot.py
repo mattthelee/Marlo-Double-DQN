@@ -95,7 +95,6 @@ class agent:
         self.observation_shape = observation_shape
         self.action_size = action_size
         self.block_list = ['air','cobblestone','stone','gold_block']
-        self.block_vision_size = len(self.block_list) * block_map_shape[0] * block_map_shape[1]
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95   # discount rate
         self.epsilon_min = 0.01
@@ -199,7 +198,7 @@ def main():
     action_size = env.action_space.n
 
     # Initialise agent and then run it.
-    myagent = agent(observation_shape, action_size,block_map_shape, False,1.0)
+    myagent = agent(observation_shape, action_size, False,1.0)
     scores = trainAgent(env, myagent)
     '''
     #Can start from a pre-built model
