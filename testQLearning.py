@@ -2,16 +2,16 @@ from QLearning import QLearningAgent
 import utils
 
 def main():
-    env = utils.setupEnv('MarLo-Vertical-v0')
+    env = utils.setupEnv('MarLo-CliffWalking-v0')
     # Get the number of available actions, minus waiting action
     #actionSize = env.action_space.n
     actionSize = 5
 
-    epsilonDecay = 0.97
+    epsilonDecay = 0.98
     #alphas = [0.8,0.5,0.1]
     #gammas = [1,0.5]
 
-    alphas = [0.5]
+    alphas = [0.8]
     gammas = [1]
     i = 1
 

@@ -110,7 +110,7 @@ class MC_agent(object):
                 return_val = reward + sum([ x[2] * self.gamma ** i for i , x in enumerate(history[t:])])
                 if self.training:
                     oldQValueAction = self.qTable[ep_state][self.actions.index(ep_action)]
-                    self.qTable[ep_state][self.actions.index(ep_action)] = oldQValueAction + 1/states_count[ep_state][self.actions.index(ep_action)] * \
+                    self.qTable[ep_state][self.actions.index(ep_action)] = oldQValueAction + (1/states_count[ep_state][self.actions.index(ep_action)]) * \
                                                                               (return_val - oldQValueAction)
 
 

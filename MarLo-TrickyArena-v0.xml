@@ -125,7 +125,7 @@
           <DrawBlock type="water" x="-13" y="226" z="-18"/>
           <DrawBlock type="redstone_block" x="9" y="226" z="-20"/>
         </DrawingDecorator>
-        <ServerQuitFromTimeUp description="out_of_time" timeLimitMs="30000"/>
+        <ServerQuitFromTimeUp description="out_of_time" timeLimitMs="45000"/>
         <ServerQuitWhenAnyAgentFinishes description=""/>
       </ServerHandlers>
     </ServerSection>
