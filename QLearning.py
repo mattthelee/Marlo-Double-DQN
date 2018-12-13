@@ -5,6 +5,7 @@ import json
 import utils
 import csv
 from time import sleep
+import sys
 
 
 # Main Q-Learning Agent Class
@@ -18,8 +19,7 @@ class QLearningAgent(object):
         self.epsilon = epsilon # Given Epsilon
         self.epsilon_decay = epsilon_decay # Given Epsilon Decay
         self.training = training # Given training flag
-        # Don't consider waiting action
-        self.actions = [i for i in range(1,actions)]
+        self.actions = [i for i in range(1,actions)] # Given action space - Don't consider waiting action
         self.QTableName = QTableName # Given QTable Name - To save QTable as JSON
         self.CSVName = CSVName # Given CSV Name = To save results
         self.episodes = episodes # Given episodes
@@ -56,13 +56,7 @@ class QLearningAgent(object):
                 action = self.act(env, currentState)
 
                 # Play the given action in the environment
-                #image, reward, done, obs = utils.completeAction(env,action)
                 image, reward, done, info = env.step(action)
-
-
-                # Map the actions back to the 5 & 6 for the Q-Table
-                if action == 7: action = 5
-                if action == 8: action = 6
 
                 # Get the observations from the info provided
                 obs = info['observation']
@@ -117,11 +111,6 @@ class QLearningAgent(object):
                     # Update this Q-Function following the Bellman Equation
                     self.qTable[currentState][self.actions.index(action)] = oldQValueAction + self.alpha * (reward + self.gamma * max(self.qTable[newState]) - oldQValueAction)
                     print("Reward of %s added to the Q-Table at %s with action %s" % (str(reward), currentState, action))
-                    if reward > 0:
-                        print("\n\n\n\n ------- Positive Reward -------------------------------------------------------------------------------------------------- \n\n")
-                    if reward < -0.5:
-                        print(
-                            "\n\n\n\n ------- Large Negative Reward -------------------------------------------------------------------------------------------------- \n\n")
 
 
                     # Find the new Q-Functions for this state and print to screen
@@ -214,23 +203,15 @@ class QLearningAgent(object):
 
 # Main function
 def main():
-    """
     if len(sys.argv) > 1:
         env = utils.setupEnv(sys.argv[1])
     elif len(sys.argv) > 2:
         env = utils.setupEnv(sys.argv[1], port=sys.argv[2])
     else:
         env = utils.setupEnv()
-    """
-
-
-    env = utils.setupEnv('MarLo-TrickyArena-v0')
-    #env = utils.setupEnv('MarLo-CliffWalking-v0')
-    #env = utils.setupEnv()
 
     # Get the number of available actions
-    #actionSize = env.action_space.n
-    actionSize = 5
+    actionSize = env.action_space.n
 
     # Give user decision on loading model or not
     load = input("Load Q Table? y/n - Default as y:________")

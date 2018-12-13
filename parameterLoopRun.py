@@ -4,15 +4,11 @@ import utils
 def main():
     env = utils.setupEnv('MarLo-TrickyArena-v0')
     # Get the number of available actions, minus waiting action
-    #actionSize = env.action_space.n
-    actionSize = 5;
+    actionSize = env.action_space.n
 
     epsilonDecay = 0.98
-    #alphas = [0.8,0.5,0.1]
-    #gammas = [1,0.5]
-
-    alphas = [0.5]
-    gammas = [1]
+    alphas = [0.8,0.5,0.1]
+    gammas = [1,0.5]
 
 
     for alpha in alphas:
