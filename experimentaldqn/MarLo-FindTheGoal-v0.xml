@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mission xmlns="http://ProjectMalmo.microsoft.com">
+  <About>
+    <Summary>Find the goal!</Summary>
+  </About>
+  <ModSettings>
+    <MsPerTick> 50 </MsPerTick>
+    <PrioritiseOffscreenRendering>true</PrioritiseOffscreenRendering>
+  </ModSettings>
+
+  <ServerSection>
+    <ServerInitialConditions>
+      <Time>
+        <StartTime>6000</StartTime>
+        <AllowPassageOfTime>false</AllowPassageOfTime>
+      </Time>
+      <Weather>clear</Weather>
+      <AllowSpawning>false</AllowSpawning>
+    </ServerInitialConditions>
+
+    <ServerHandlers>
+      <FlatWorldGenerator generatorString="3;7,220*1,5*3,2;3;,biome_1"/>
+      <ClassroomDecorator seed=" random ">
+        <specification>
+          <width>7</width>
+          <height>7</height>
+          <length>7</length>
+          <pathLength>0</pathLength>
+          <divisions>
+            <southNorth>0</southNorth>
+            <eastWest>0</eastWest>
+            <aboveBelow>0</aboveBelow>
+          </divisions>
+          <horizontalObstacles>
+            <gap>0</gap>
+            <bridge>0</bridge>
+            <door>0</door>
+            <puzzle>0</puzzle>
+            <jump>0</jump>
+          </horizontalObstacles>
+          <verticalObstacles>
+            <stairs>0</stairs>
+            <ladder>0</ladder>
+            <jump>0</jump>
+          </verticalObstacles>
+          <hintLikelihood>1</hintLikelihood>
+        </specification>
+      </ClassroomDecorator>
+      <ServerQuitFromTimeUp description="out_of_time" timeLimitMs="1200000"/>
+      <ServerQuitWhenAnyAgentFinishes/>
+    </ServerHandlers>
+  </ServerSection>
+
+  <AgentSection mode="Survival">
+    <Name>MarLo-agent0</Name>
+    <AgentStart>
+      <Placement x="-203.5" y="81.0" z="217.5"/>
+    </AgentStart>
+    <AgentHandlers>
+      <VideoProducer want_depth="false">
+        <Width>800</Width>
+        <Height>600</Height>
+      </VideoProducer>
+      <ObservationFromFullStats/>
+      <ObservationFromGrid>
+          <Grid name="floor11x11">
+            <min x="-5" y="-1" z="-5"/>
+            <max x="5" y="1" z="5"/>
+          </Grid>
+      </ObservationFromGrid>
+
+      <DiscreteMovementCommands>
+        <ModifierList type="allow-list">
+          <command>move</command>
+          <command>turn</command>
+        </ModifierList>
+      </DiscreteMovementCommands>
+
+      <MissionQuitCommands/>
+      <RewardForSendingCommand reward="-1000"/>
+      <RewardForMissionEnd rewardForDeath="-1">
+        <Reward description="found_goal" reward="50000"/>
+        <Reward description="out_of_time" reward="-10000"/>
+      </RewardForMissionEnd>
+      <RewardForTouchingBlockType>
+        <Block reward="50000" type="gold_ore diamond_ore redstone_ore"/>
+      </RewardForTouchingBlockType>
+      <AgentQuitFromTouchingBlockType>
+        <Block description="found_goal" type="gold_block diamond_block redstone_block"/>
+      </AgentQuitFromTouchingBlockType>
+      <AgentQuitFromReachingCommandQuota description="command_quota_reached" total="1000"/>
+    </AgentHandlers>
+  </AgentSection>
+</Mission>

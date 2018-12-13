@@ -56,16 +56,16 @@ def trainAgent(env, agent):
             # Receive the outcome of the action
             new_state, reward, done, info = env.step(action)
 
-
+            print(f"Taking action {action}, got reward: {reward}")
             # Adds this image and action to memory
             agent.memory.append((state,action, reward, new_state, done))
-
+            game_score += reward
             if done:
                 # Score is the scores for finished games
                 print("Game: ",i ," complete, score: " , game_score," last 50 scores avg: ", np.mean(scores), " epsilon ", agent.epsilon)
                 scores.append(game_score)
                 break
-            game_score += reward
+
             state = new_state
             oldInfo = info
 
@@ -87,11 +87,17 @@ def trainAgent(env, agent):
         else:
             agent.epsilon = 0
         # Update the storage of the model
-        model_yaml = agent.model.to_yaml()
-        with open("model.yaml", "w") as yaml_file:
-            yaml_file.write(model_yaml)
-        # Save the weights of the model
-        agent.model.save_weights('model_weights.h5')
+        agent.saveModelToFile(agent.model,'model')
+        # for first 300 items in memory I am training model to get vague values based on reward alone
+        if len(agent.memory) < 300:
+            agent.saveModelToFile(agent.model,'secondary')
+            agent.secondaryDQN = agent.loadModelFromFile('secondary')
+        # every 10 games update the secondary model, starting from the 3rd
+        # This way the secondary model will always be at least 10 games behind the primary model
+        if i % 10 == 3:
+            agent.secondaryDQN = agent.loadModelFromFile('secondary')
+            agent.saveModelToFile(agent.model,'secondary')
+
 
     return scores
 
@@ -109,11 +115,12 @@ def testAgent(env, agent):
             print("Starting goal step: ", j, " of game: ", i, " avg score: ", np.mean(scores), " action: ", action)
             new_state, reward, done, info = env.step(action)
             #pdb.set_trace()
+            game_score += reward
             if done:
                 print("Game: ",i ," complete, score: " , game_score," last 50 scores avg: ", np.mean(scores), " epsilon ", agent.epsilon)
                 scores.append(game_score)
                 break
-            game_score += reward
+
             state = new_state
     return scores
 
@@ -125,28 +132,19 @@ class agent:
         self.block_list = ['air','cobblestone','stone','gold_block']
         self.block_vision_size = len(self.block_list) * block_map_shape[0] * block_map_shape[1]
         self.memory = deque(maxlen=2000)
-        self.gamma = 1.0    # discount rate
+        self.gamma = 0.95   # discount rate
         self.epsilon_min = 0.01
         self.epsilon = epsilon
-        self.epsilon_decay = 0.999
-        self.learning_rate = 0.5
+        self.epsilon_decay = 0.99
         self.CSVName = 'dqn_bot_results.csv'
 
         if load_model_file:
-            # If you want to load a previous model
-            # This is required to stop tensorflow reinitialising weights on model load
-            #manual_variable_initialization(True)
-            #self.model = load_model('model.h5')
-            #self.model.load_weights('model.h5')
-            yaml_file = open('model.yaml', 'r')
-            loaded_model_yaml = yaml_file.read()
-            yaml_file.close()
-            self.model = model_from_yaml(loaded_model_yaml)
-            self.model.load_weights('model_weights.h5')
-            self.model.compile(loss='mse', optimizer='rmsprop')
+            self.model = self.loadModelFromFile('model')
+            self.secondaryDQN = self.loadModelFromFile('secondary')
         else:
             # Start from scratch
             self.model = self.create_model()
+            self.secondaryDQN = self.create_model()
 
     def create_model(self):
         model = Sequential()
@@ -168,6 +166,25 @@ class agent:
         model.compile(loss='mse', optimizer='rmsprop')
         return model
 
+    def loadModelFromFile(self,file):
+        # If you want to load a previous model
+        # Load strucutre and weights separately to prevent tensorflow intialising and deleting weights
+        yaml_file = open(file + '.yaml', 'r')
+        loaded_model_yaml = yaml_file.read()
+        yaml_file.close()
+        model = model_from_yaml(loaded_model_yaml)
+        model.load_weights(file + '_weights.h5')
+        model.compile(loss='mse', optimizer='rmsprop')
+        return model
+
+    def saveModelToFile(self,model,file):
+        model_yaml = model.to_yaml()
+        with open(file + ".yaml", "w") as yaml_file:
+            yaml_file.write(model_yaml)
+        # Save the weights of the model
+        model.save_weights(file+'_weights.h5')
+        return
+
     def act(self, state):
         # Randomly choose to take a randomly chosen action to allow exploration
         # When epsilon is high, higher chance, therefore decrease it overtime
@@ -183,8 +200,8 @@ class agent:
         x_train = []
         y_train = []
         for state, action, reward, newState, done in batch:
-            if done:
-                # If finished
+            if done or len(self.memory) < 300:
+                # If finished or network has not had time to learn reasonable values
                 # Set the reward for finishing the game
                 target_q = reward
             else:
@@ -195,11 +212,12 @@ class agent:
                 # Bellman equation -  use the estimates of the
                 # Recalling what happened, not what could happen
                 # Target_Q is the ground truth Y
-                target_q = reward + self.gamma * np.amax(self.model.predict(newState.reshape([-1, 600, 800, 3])))
+                target_q = reward + self.gamma * np.amax(self.secondaryDQN.predict(newState.reshape([-1, 600, 800, 3])))
 
             # prediction is prediction_q
             # prediction has the 5 actions and predicted q-values
             prediction = self.model.predict(state.reshape([-1, 600, 800, 3]))
+            print(f"action: {action}, reward:{reward}, qval:{target_q}, predq:{prediction[0][action]}")
             # update the certain action that we did take with a better target, from above
             prediction[0][action] = target_q
 
@@ -245,7 +263,7 @@ def main():
     # Can start from a pre-built model
     #load = input("Load model? y/n or an epsilon value to continue: ")
     block_map_shape = (4,4,3)
-    myagent = agent(observation_shape, action_size,block_map_shape)
+    myagent = agent(observation_shape, action_size,block_map_shape, False,1.0)
     #pdb.set_trace()
     scores = trainAgent(env, myagent)
     '''
